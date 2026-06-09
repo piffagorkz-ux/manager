@@ -31,6 +31,8 @@ Environment variables:
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
 
+Если Cloudflare деплоит проект как Worker, `wrangler.toml` уже указывает assets directory `./dist`.
+
 ## Local
 
 ```bash
