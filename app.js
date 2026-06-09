@@ -30,6 +30,15 @@ const PLANS = {
   },
 };
 
+const VIEWS = {
+  ...PLANS,
+  completed: {
+    title: "Выполненные",
+    hint: "Готовые задачи из всех планов. Сними галочку, чтобы вернуть задачу в работу.",
+    empty: "Здесь появятся закрытые задачи.",
+  },
+};
+
 const taskForm = document.querySelector("#taskForm");
 const taskInput = document.querySelector("#taskInput");
 const taskList = document.querySelector("#taskList");
@@ -164,7 +173,7 @@ function createTask(title, plan = activePlan, done = false, createdAt = Date.now
   return {
     id: crypto.randomUUID(),
     title: title.trim(),
-    plan,
+    plan: PLANS[plan] ? plan : "today",
     done,
     createdAt,
   };
@@ -220,16 +229,20 @@ function tasksFor(plan) {
   return state.tasks.filter((task) => task.plan === plan);
 }
 
+function tasksForActiveView() {
+  if (activePlan === "completed") return state.tasks.filter((task) => task.done);
+  return tasksFor(activePlan).filter((task) => !task.done);
+}
+
 function openPlan(plan) {
   activePlan = plan;
   render();
-  taskInput.focus();
+  if (activePlan !== "completed") taskInput.focus();
 }
 
 function render() {
-  const current = PLANS[activePlan];
-  const visibleTasks = tasksFor(activePlan).sort((a, b) => {
-    if (a.done !== b.done) return a.done ? 1 : -1;
+  const current = VIEWS[activePlan];
+  const visibleTasks = tasksForActiveView().sort((a, b) => {
     return b.createdAt - a.createdAt;
   });
 
@@ -237,6 +250,7 @@ function render() {
   planTitle.textContent = current.title;
   planHint.textContent = current.hint;
   emptyHint.textContent = current.empty;
+  taskForm.hidden = activePlan === "completed";
 
   tabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.plan === activePlan));
   planCards.forEach((card) => {
