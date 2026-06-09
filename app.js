@@ -6,7 +6,16 @@ const LANG_KEY = "simple-plans-lang";
 
 const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
 const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
-const THEMES = ["forest", "sky", "violet", "rose", "amber", "dark"];
+const THEMES = [
+  "palette1",
+  "palette2",
+  "palette3",
+  "palette4",
+  "palette5",
+  "palette6",
+  "palette7",
+  "palette8",
+];
 const LANGS = ["ru", "en"];
 
 const COPY = {
@@ -24,12 +33,14 @@ const COPY = {
     languageTitle: "Язык",
     cleanupTitle: "Очистка",
     themes: {
-      forest: "Зеленая",
-      sky: "Синяя",
-      violet: "Фиолетовая",
-      rose: "Розовая",
-      amber: "Теплая",
-      dark: "Темная",
+      palette1: "Схема 1",
+      palette2: "Схема 2",
+      palette3: "Схема 3",
+      palette4: "Схема 4",
+      palette5: "Схема 5",
+      palette6: "Схема 6",
+      palette7: "Схема 7",
+      palette8: "Схема 8",
     },
     views: {
       today: {
@@ -83,12 +94,14 @@ const COPY = {
     languageTitle: "Language",
     cleanupTitle: "Cleanup",
     themes: {
-      forest: "Green",
-      sky: "Blue",
-      violet: "Violet",
-      rose: "Rose",
-      amber: "Warm",
-      dark: "Dark",
+      palette1: "Scheme 1",
+      palette2: "Scheme 2",
+      palette3: "Scheme 3",
+      palette4: "Scheme 4",
+      palette5: "Scheme 5",
+      palette6: "Scheme 6",
+      palette7: "Scheme 7",
+      palette8: "Scheme 8",
     },
     views: {
       today: {
@@ -151,7 +164,7 @@ const cleanupTitle = document.querySelector("#cleanupTitle");
 let activePlan = "today";
 let state = createEmptyState();
 let db = null;
-let activeTheme = loadPreference(THEME_KEY, THEMES, "forest");
+let activeTheme = loadPreference(THEME_KEY, THEMES, "palette1");
 let activeLang = loadPreference(LANG_KEY, LANGS, "ru");
 
 init();
