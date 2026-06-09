@@ -20,7 +20,6 @@
             <p class="date-line" id="dateLine"></p>
             <h1>Планы</h1>
           </div>
-          <button class="quiet-button" id="clearDone" type="button">Убрать выполненные</button>
         </header>
 
         <nav class="tabs" aria-label="Периоды планирования">
@@ -30,6 +29,7 @@
           <button class="tab" type="button" data-plan="month">Месяц</button>
           <button class="tab" type="button" data-plan="year">Год</button>
           <button class="tab" type="button" data-plan="completed">Выполненные</button>
+          <button class="tab" type="button" data-plan="settings">Настройки</button>
         </nav>
 
         <form class="add-form" id="taskForm">
@@ -77,6 +77,53 @@
           <div class="empty-state" id="emptyState">
             <h3>Здесь пока чисто</h3>
             <p id="emptyHint">Добавь одну задачу, которую действительно хочется сделать.</p>
+          </div>
+
+          <div class="settings-panel" id="settingsPanel" hidden>
+            <section class="settings-group" aria-labelledby="themeTitle">
+              <h3 id="themeTitle">Тема</h3>
+              <div class="choice-grid" id="themeChoices">
+                <button class="theme-choice" type="button" data-theme="forest">
+                  <span class="theme-dot forest"></span>
+                  <span>Зеленая</span>
+                </button>
+                <button class="theme-choice" type="button" data-theme="sky">
+                  <span class="theme-dot sky"></span>
+                  <span>Синяя</span>
+                </button>
+                <button class="theme-choice" type="button" data-theme="violet">
+                  <span class="theme-dot violet"></span>
+                  <span>Фиолетовая</span>
+                </button>
+                <button class="theme-choice" type="button" data-theme="rose">
+                  <span class="theme-dot rose"></span>
+                  <span>Розовая</span>
+                </button>
+                <button class="theme-choice" type="button" data-theme="amber">
+                  <span class="theme-dot amber"></span>
+                  <span>Теплая</span>
+                </button>
+                <button class="theme-choice" type="button" data-theme="dark">
+                  <span class="theme-dot dark"></span>
+                  <span>Темная</span>
+                </button>
+              </div>
+            </section>
+
+            <section class="settings-group" aria-labelledby="languageTitle">
+              <h3 id="languageTitle">Язык</h3>
+              <div class="segmented">
+                <button class="lang-choice" type="button" data-lang="ru">Русский</button>
+                <button class="lang-choice" type="button" data-lang="en">English</button>
+              </div>
+            </section>
+
+            <section class="settings-group" aria-labelledby="cleanupTitle">
+              <h3 id="cleanupTitle">Очистка</h3>
+              <button class="quiet-button danger-button" id="clearDone" type="button">
+                Убрать выполненные
+              </button>
+            </section>
           </div>
         </section>
       </section>

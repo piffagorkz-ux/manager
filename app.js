@@ -1,41 +1,132 @@
 const STORAGE_KEY = "simple-plans-v2";
 const OLD_STORAGE_KEY = "codex-todo-tracker-v1";
 const LAST_OPENED_KEY = "simple-plans-last-opened";
+const THEME_KEY = "simple-plans-theme";
+const LANG_KEY = "simple-plans-lang";
 
-const PLANS = {
-  today: {
-    title: "Сегодня",
-    hint: "Главный фокус на день.",
-    empty: "Добавь одну задачу, которую действительно хочется сделать.",
-  },
-  tomorrow: {
-    title: "Завтра",
-    hint: "Этот список автоматически станет сегодняшним при новом дне.",
-    empty: "Запиши то, что не должно потеряться к утру.",
-  },
-  week: {
-    title: "Неделя",
-    hint: "То, что важно держать в поле зрения в ближайшие дни.",
-    empty: "Пара задач на неделю уже даст голове больше воздуха.",
-  },
-  month: {
-    title: "Месяц",
-    hint: "Средние цели без лишней детализации.",
-    empty: "Сюда хорошо класть дела, которые пока рано дробить.",
-  },
-  year: {
-    title: "Год",
-    hint: "Большие планы, направления и личные ориентиры.",
-    empty: "Один годовой ориентир лучше, чем десять забытых обещаний.",
-  },
-};
+const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
+const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
+const THEMES = ["forest", "sky", "violet", "rose", "amber", "dark"];
+const LANGS = ["ru", "en"];
 
-const VIEWS = {
-  ...PLANS,
-  completed: {
-    title: "Выполненные",
-    hint: "Готовые задачи из всех планов. Сними галочку, чтобы вернуть задачу в работу.",
-    empty: "Здесь появятся закрытые задачи.",
+const COPY = {
+  ru: {
+    appTitle: "Планы",
+    addPlaceholder: "Добавить задачу",
+    addButton: "Добавить",
+    completedAt: "Выполнено",
+    edit: "Изм",
+    editTitle: "Редактировать",
+    deleteTitle: "Удалить",
+    clearDone: "Убрать выполненные",
+    settings: "Настройки",
+    themeTitle: "Тема",
+    languageTitle: "Язык",
+    cleanupTitle: "Очистка",
+    themes: {
+      forest: "Зеленая",
+      sky: "Синяя",
+      violet: "Фиолетовая",
+      rose: "Розовая",
+      amber: "Теплая",
+      dark: "Темная",
+    },
+    views: {
+      today: {
+        title: "Сегодня",
+        hint: "Главный фокус на день.",
+        empty: "Добавь одну задачу, которую действительно хочется сделать.",
+      },
+      tomorrow: {
+        title: "Завтра",
+        hint: "Этот список автоматически станет сегодняшним при новом дне.",
+        empty: "Запиши то, что не должно потеряться к утру.",
+      },
+      week: {
+        title: "Неделя",
+        hint: "То, что важно держать в поле зрения в ближайшие дни.",
+        empty: "Пара задач на неделю уже даст голове больше воздуха.",
+      },
+      month: {
+        title: "Месяц",
+        hint: "Средние цели без лишней детализации.",
+        empty: "Сюда хорошо класть дела, которые пока рано дробить.",
+      },
+      year: {
+        title: "Год",
+        hint: "Большие планы, направления и личные ориентиры.",
+        empty: "Один годовой ориентир лучше, чем десять забытых обещаний.",
+      },
+      completed: {
+        title: "Выполненные",
+        hint: "Готовые задачи из всех планов. Сними галочку, чтобы вернуть задачу в работу.",
+        empty: "Здесь появятся закрытые задачи.",
+      },
+      settings: {
+        title: "Настройки",
+        hint: "Тема, язык и аккуратная очистка выполненных задач.",
+        empty: "",
+      },
+    },
+  },
+  en: {
+    appTitle: "Plans",
+    addPlaceholder: "Add a task",
+    addButton: "Add",
+    completedAt: "Completed",
+    edit: "Edit",
+    editTitle: "Edit",
+    deleteTitle: "Delete",
+    clearDone: "Clear completed",
+    settings: "Settings",
+    themeTitle: "Theme",
+    languageTitle: "Language",
+    cleanupTitle: "Cleanup",
+    themes: {
+      forest: "Green",
+      sky: "Blue",
+      violet: "Violet",
+      rose: "Rose",
+      amber: "Warm",
+      dark: "Dark",
+    },
+    views: {
+      today: {
+        title: "Today",
+        hint: "Your main focus for the day.",
+        empty: "Add one task you actually want to finish.",
+      },
+      tomorrow: {
+        title: "Tomorrow",
+        hint: "This list automatically becomes Today on a new day.",
+        empty: "Capture what should not be lost by morning.",
+      },
+      week: {
+        title: "Week",
+        hint: "What matters in the next few days.",
+        empty: "A few weekly tasks already make the head lighter.",
+      },
+      month: {
+        title: "Month",
+        hint: "Medium goals without too much detail.",
+        empty: "Good place for plans that are not ready to split yet.",
+      },
+      year: {
+        title: "Year",
+        hint: "Bigger plans, directions, and personal landmarks.",
+        empty: "One yearly direction beats ten forgotten promises.",
+      },
+      completed: {
+        title: "Completed",
+        hint: "Finished tasks from all plans. Uncheck one to bring it back.",
+        empty: "Completed tasks will appear here.",
+      },
+      settings: {
+        title: "Settings",
+        hint: "Theme, language, and completed task cleanup.",
+        empty: "",
+      },
+    },
   },
 };
 
@@ -50,18 +141,41 @@ const planCards = document.querySelectorAll(".plan-card");
 const planTitle = document.querySelector("#planTitle");
 const planHint = document.querySelector("#planHint");
 const dateLine = document.querySelector("#dateLine");
+const settingsPanel = document.querySelector("#settingsPanel");
+const themeChoices = document.querySelectorAll(".theme-choice");
+const langChoices = document.querySelectorAll(".lang-choice");
+const themeTitle = document.querySelector("#themeTitle");
+const languageTitle = document.querySelector("#languageTitle");
+const cleanupTitle = document.querySelector("#cleanupTitle");
 
 let activePlan = "today";
 let state = createEmptyState();
 let db = null;
+let activeTheme = loadPreference(THEME_KEY, THEMES, "forest");
+let activeLang = loadPreference(LANG_KEY, LANGS, "ru");
 
 init();
 
 async function init() {
+  applyPreferences();
   db = createSupabaseClient();
   state = db ? await loadRemoteState() : loadLocalState();
   await rollTomorrowIntoToday();
   render();
+}
+
+function copy() {
+  return COPY[activeLang];
+}
+
+function loadPreference(key, allowed, fallback) {
+  const saved = localStorage.getItem(key);
+  return allowed.includes(saved) ? saved : fallback;
+}
+
+function applyPreferences() {
+  document.documentElement.dataset.theme = activeTheme;
+  document.documentElement.lang = activeLang;
 }
 
 function createSupabaseClient() {
@@ -228,7 +342,7 @@ function todayISO() {
 }
 
 function readableDate() {
-  return new Intl.DateTimeFormat("ru-RU", {
+  return new Intl.DateTimeFormat(activeLang === "ru" ? "ru-RU" : "en-US", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -247,11 +361,10 @@ function tasksForActiveView() {
 function openPlan(plan) {
   activePlan = plan;
   render();
-  if (activePlan !== "completed") taskInput.focus();
 }
 
 function render() {
-  const current = VIEWS[activePlan];
+  const current = copy().views[activePlan];
   const visibleTasks = tasksForActiveView().sort((a, b) => {
     return b.createdAt - a.createdAt;
   });
@@ -260,7 +373,11 @@ function render() {
   planTitle.textContent = current.title;
   planHint.textContent = current.hint;
   emptyHint.textContent = current.empty;
-  taskForm.hidden = activePlan === "completed";
+  taskForm.hidden = activePlan === "completed" || activePlan === "settings";
+  taskList.hidden = activePlan === "settings";
+  emptyState.hidden = activePlan === "settings";
+  settingsPanel.hidden = activePlan !== "settings";
+  renderStaticText();
 
   tabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.plan === activePlan));
   planCards.forEach((card) => {
@@ -269,9 +386,46 @@ function render() {
     card.querySelector("span").textContent = tasksFor(plan).filter((task) => !task.done).length;
   });
 
-  taskList.innerHTML = "";
-  visibleTasks.forEach((task) => taskList.append(createTaskElement(task)));
-  emptyState.classList.toggle("is-visible", visibleTasks.length === 0);
+  if (activePlan !== "settings") {
+    taskList.innerHTML = "";
+    visibleTasks.forEach((task) => taskList.append(createTaskElement(task)));
+    emptyState.classList.toggle("is-visible", visibleTasks.length === 0);
+  }
+  renderSettingsState();
+}
+
+function renderStaticText() {
+  const text = copy();
+  document.title = text.appTitle;
+  document.querySelector("h1").textContent = text.appTitle;
+  taskInput.placeholder = text.addPlaceholder;
+  document.querySelector(".add-button").textContent = text.addButton;
+  clearDone.textContent = text.clearDone;
+  themeTitle.textContent = text.themeTitle;
+  languageTitle.textContent = text.languageTitle;
+  cleanupTitle.textContent = text.cleanupTitle;
+
+  tabs.forEach((tab) => {
+    tab.textContent = text.views[tab.dataset.plan].title;
+  });
+
+  planCards.forEach((card) => {
+    const plan = card.dataset.planCard;
+    card.querySelector("strong").textContent = text.views[plan].title;
+  });
+
+  themeChoices.forEach((button) => {
+    button.querySelector("span:last-child").textContent = text.themes[button.dataset.theme];
+  });
+}
+
+function renderSettingsState() {
+  themeChoices.forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.theme === activeTheme);
+  });
+  langChoices.forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.lang === activeLang);
+  });
 }
 
 function createTaskElement(task) {
@@ -296,7 +450,7 @@ function createTaskElement(task) {
   if (activePlan === "completed") {
     const meta = document.createElement("div");
     meta.className = "task-meta";
-    meta.textContent = `Выполнено: ${formatCompletedDate(task.completedAt || task.createdAt)}`;
+    meta.textContent = `${copy().completedAt}: ${formatCompletedDate(task.completedAt || task.createdAt)}`;
     content.append(meta);
   }
 
@@ -306,14 +460,14 @@ function createTaskElement(task) {
   const editButton = document.createElement("button");
   editButton.className = "task-action";
   editButton.type = "button";
-  editButton.title = "Редактировать";
-  editButton.textContent = "Изм";
+  editButton.title = copy().editTitle;
+  editButton.textContent = copy().edit;
   editButton.addEventListener("click", () => editTask(task.id));
 
   const deleteButton = document.createElement("button");
   deleteButton.className = "task-action delete";
   deleteButton.type = "button";
-  deleteButton.title = "Удалить";
+  deleteButton.title = copy().deleteTitle;
   deleteButton.textContent = "x";
   deleteButton.addEventListener("click", () => deleteTask(task.id));
 
@@ -323,7 +477,7 @@ function createTaskElement(task) {
 }
 
 function formatCompletedDate(value) {
-  return new Intl.DateTimeFormat("ru-RU", {
+  return new Intl.DateTimeFormat(activeLang === "ru" ? "ru-RU" : "en-US", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -421,6 +575,24 @@ tabs.forEach((tab) => {
 
 planCards.forEach((card) => {
   card.addEventListener("click", () => openPlan(card.dataset.planCard));
+});
+
+themeChoices.forEach((button) => {
+  button.addEventListener("click", () => {
+    activeTheme = button.dataset.theme;
+    localStorage.setItem(THEME_KEY, activeTheme);
+    applyPreferences();
+    render();
+  });
+});
+
+langChoices.forEach((button) => {
+  button.addEventListener("click", () => {
+    activeLang = button.dataset.lang;
+    localStorage.setItem(LANG_KEY, activeLang);
+    applyPreferences();
+    render();
+  });
 });
 
 clearDone.addEventListener("click", async () => {
