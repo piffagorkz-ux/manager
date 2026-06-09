@@ -11,9 +11,11 @@ const config = {
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(dist, { recursive: true });
 
-for (const file of ["index.html", "styles.css", "app.js"]) {
+for (const file of ["index.html", "styles.css", "app.js", "manifest.webmanifest"]) {
   fs.copyFileSync(path.join(root, file), path.join(dist, file));
 }
+
+fs.cpSync(path.join(root, "icons"), path.join(dist, "icons"), { recursive: true });
 
 const content = `window.APP_CONFIG = ${JSON.stringify(config, null, 2)};\n`;
 fs.writeFileSync(path.join(dist, "config.js"), content);
