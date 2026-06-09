@@ -219,14 +219,17 @@ h1 {
 
 .tab {
   min-width: 0;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--muted);
   padding: 10px 13px;
 }
 
 .tab.is-active {
-  background: var(--ink);
-  color: #fff;
+  border-color: var(--accent);
+  background: var(--soft);
+  color: var(--accent-ink);
+  font-weight: 800;
 }
 
 .add-form {
@@ -300,6 +303,11 @@ button:focus-visible {
 .plan-card.is-current {
   border-color: var(--accent);
   background: var(--soft);
+  color: var(--accent-ink);
+}
+
+.plan-card.is-current span,
+.plan-card.is-current strong {
   color: var(--accent-ink);
 }
 
