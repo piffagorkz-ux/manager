@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Простой трекер задач</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="tracker" aria-label="Простой трекер задач">
+        <header class="header">
+          <div>
+            <p class="date-line" id="dateLine"></p>
+            <h1>Планы</h1>
+          </div>
+          <button class="quiet-button" id="clearDone" type="button">Убрать выполненные</button>
+        </header>
+
+        <nav class="tabs" aria-label="Периоды планирования">
+          <button class="tab is-active" type="button" data-plan="today">Сегодня</button>
+          <button class="tab" type="button" data-plan="tomorrow">Завтра</button>
+          <button class="tab" type="button" data-plan="week">Неделя</button>
+          <button class="tab" type="button" data-plan="month">Месяц</button>
+          <button class="tab" type="button" data-plan="year">Год</button>
+        </nav>
+
+        <form class="add-form" id="taskForm">
+          <input
+            id="taskInput"
+            type="text"
+            placeholder="Добавить задачу"
+            autocomplete="off"
+            required
+          />
+          <button class="add-button" type="submit">Добавить</button>
+        </form>
+
+        <section class="overview" aria-label="Сводка по планам">
+          <button class="plan-card is-current" type="button" data-plan-card="today">
+            <span id="todayCount">0</span>
+            <strong>Сегодня</strong>
+          </button>
+          <button class="plan-card" type="button" data-plan-card="tomorrow">
+            <span id="tomorrowCount">0</span>
+            <strong>Завтра</strong>
+          </button>
+          <button class="plan-card" type="button" data-plan-card="week">
+            <span id="weekCount">0</span>
+            <strong>Неделя</strong>
+          </button>
+          <button class="plan-card" type="button" data-plan-card="month">
+            <span id="monthCount">0</span>
+            <strong>Месяц</strong>
+          </button>
+          <button class="plan-card" type="button" data-plan-card="year">
+            <span id="yearCount">0</span>
+            <strong>Год</strong>
+          </button>
+        </section>
+
+        <section class="list-panel" aria-live="polite">
+          <div class="list-head">
+            <h2 id="planTitle">Сегодня</h2>
+            <p id="planHint">Главный фокус на день.</p>
+          </div>
+
+          <ul class="task-list" id="taskList"></ul>
+
+          <div class="empty-state" id="emptyState">
+            <h3>Здесь пока чисто</h3>
+            <p id="emptyHint">Добавь одну задачу, которую действительно хочется сделать.</p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
