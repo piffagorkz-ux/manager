@@ -43,6 +43,9 @@ const COPY = {
       palette8: "Схема 8",
     },
     views: {
+      work: {
+        title: "В работе",
+      },
       today: {
         title: "Сегодня",
         hint: "Главный фокус на день.",
@@ -104,6 +107,9 @@ const COPY = {
       palette8: "Scheme 8",
     },
     views: {
+      work: {
+        title: "In progress",
+      },
       today: {
         title: "Today",
         hint: "Your main focus for the day.",
@@ -162,6 +168,7 @@ const languageTitle = document.querySelector("#languageTitle");
 const cleanupTitle = document.querySelector("#cleanupTitle");
 
 let activePlan = "today";
+let activeWorkPlan = "today";
 let state = createEmptyState();
 let db = null;
 let activeTheme = loadPreference(THEME_KEY, THEMES, "palette1");
@@ -368,11 +375,17 @@ function tasksFor(plan) {
 
 function tasksForActiveView() {
   if (activePlan === "completed") return state.tasks.filter((task) => task.done);
+  if (activePlan === "settings") return [];
   return tasksFor(activePlan).filter((task) => !task.done);
 }
 
 function openPlan(plan) {
-  activePlan = plan;
+  if (plan === "work") {
+    activePlan = activeWorkPlan;
+  } else {
+    activePlan = plan;
+    if (PLANS[plan]) activeWorkPlan = plan;
+  }
   render();
 }
 
@@ -392,7 +405,12 @@ function render() {
   settingsPanel.hidden = activePlan !== "settings";
   renderStaticText();
 
-  tabs.forEach((tab) => tab.classList.toggle("is-active", tab.dataset.plan === activePlan));
+  tabs.forEach((tab) => {
+    const tabPlan = tab.dataset.plan;
+    const isActive =
+      tabPlan === activePlan || (tabPlan === "work" && PLANS[activePlan]);
+    tab.classList.toggle("is-active", isActive);
+  });
   planCards.forEach((card) => {
     const plan = card.dataset.planCard;
     card.classList.toggle("is-current", plan === activePlan);
