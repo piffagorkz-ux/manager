@@ -19,11 +19,16 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   min-height: 100vh;
   margin: 0;
   background: var(--bg);
   color: var(--ink);
+  overflow-x: hidden;
 }
 
 button,
@@ -33,6 +38,7 @@ input {
 
 button {
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .app {
@@ -108,6 +114,12 @@ h1 {
   overflow-x: auto;
   padding-bottom: 2px;
   margin-bottom: 12px;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar,
+.overview::-webkit-scrollbar {
+  display: none;
 }
 
 .tab {
@@ -295,37 +307,133 @@ button:focus-visible {
 
 @media (max-width: 760px) {
   .app {
-    padding: 18px;
+    padding: 16px max(14px, env(safe-area-inset-right)) 24px
+      max(14px, env(safe-area-inset-left));
   }
 
-  .header,
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-size: clamp(2.7rem, 15vw, 4rem);
+  }
+
+  .quiet-button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .tabs {
+    margin: 0 -14px 10px;
+    padding: 0 14px 4px;
+    scroll-snap-type: x proximity;
+  }
+
+  .tab {
+    min-height: 42px;
+    padding: 9px 14px;
+    scroll-snap-align: start;
+  }
+
+  .add-form {
+    position: sticky;
+    top: 8px;
+    z-index: 3;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding: 8px;
+  }
+
+  input,
+  .add-button {
+    min-height: 50px;
+  }
+
+  .overview {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin: 12px -14px 12px;
+    padding: 0 14px 2px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .plan-card {
+    flex: 0 0 112px;
+    min-height: 76px;
+    padding: 10px;
+    scroll-snap-align: start;
+  }
+
+  .plan-card span {
+    font-size: 1.65rem;
+  }
+
   .list-head {
     flex-direction: column;
+    gap: 6px;
+    padding: 14px;
   }
 
   .list-head p {
     text-align: left;
+    font-size: 0.92rem;
   }
 
-  .overview {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .task-item {
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 13px 14px;
+  }
+
+  .task-check {
+    width: 24px;
+    height: 24px;
+  }
+
+  .task-title {
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  .task-action {
+    width: 40px;
+    height: 40px;
   }
 }
 
 @media (max-width: 480px) {
-  .add-form {
-    grid-template-columns: 1fr;
+  .date-line {
+    font-size: 0.9rem;
   }
 
-  .overview {
-    grid-template-columns: 1fr;
+  .list-panel {
+    min-height: 300px;
   }
 
   .task-item {
-    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    align-items: start;
   }
 
   .task-actions {
-    grid-column: 2;
+    grid-column: auto;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: -4px;
+  }
+
+  .task-action {
+    width: 38px;
+    height: 34px;
+    font-size: 0.82rem;
+  }
+
+  .empty-state {
+    padding: 48px 18px;
   }
 }
