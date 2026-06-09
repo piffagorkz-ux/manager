@@ -16,7 +16,20 @@
    - `SUPABASE_URL`
    - `SUPABASE_ANON_KEY`
 
-При сборке Render выполнит `npm run build` и создаст `config.js`.
+При сборке Render выполнит `npm run build` и создаст папку `dist`.
+
+## Cloudflare Pages
+
+Подключи GitHub-репозиторий и укажи:
+
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Root directory: пусто
+
+Environment variables:
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
 
 ## Local
 
