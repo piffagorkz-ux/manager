@@ -386,6 +386,12 @@ button:focus-visible {
   padding: 18px;
 }
 
+.settings-panel[hidden],
+.task-list[hidden],
+.empty-state[hidden] {
+  display: none;
+}
+
 .settings-group {
   display: grid;
   gap: 10px;
