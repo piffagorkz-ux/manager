@@ -259,10 +259,19 @@ button:focus-visible {
   accent-color: var(--accent);
 }
 
-.task-title {
+.task-content {
   min-width: 0;
+}
+
+.task-title {
   overflow-wrap: anywhere;
   font-weight: 750;
+}
+
+.task-meta {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .task-item.is-done .task-title {

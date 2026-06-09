@@ -3,9 +3,13 @@ create table if not exists public.tasks (
   title text not null check (char_length(trim(title)) > 0),
   plan text not null check (plan in ('today', 'tomorrow', 'week', 'month', 'year')),
   done boolean not null default false,
+  completed_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.tasks
+add column if not exists completed_at timestamptz;
 
 create or replace function public.set_updated_at()
 returns trigger

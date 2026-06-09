@@ -105,7 +105,7 @@ function loadLocalState() {
 async function loadRemoteState() {
   const { data, error } = await db
     .from("tasks")
-    .select("id,title,plan,done,created_at")
+    .select("id,title,plan,done,completed_at,created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -121,6 +121,7 @@ async function loadRemoteState() {
       title: task.title,
       plan: task.plan,
       done: task.done,
+      completedAt: task.completed_at ? new Date(task.completed_at).getTime() : null,
       createdAt: new Date(task.created_at).getTime(),
     })),
   };
@@ -148,6 +149,7 @@ function normalizeState(value) {
         title: String(task.title).trim(),
         plan: PLANS[task.plan] ? task.plan : "today",
         done: Boolean(task.done),
+        completedAt: task.completedAt || null,
         createdAt: task.createdAt || Date.now(),
       })),
   };
@@ -164,18 +166,26 @@ function migrateOldTasks(oldTasks) {
           task.dueDate === todayISO() ? "today" : "week",
           Boolean(task.done),
           task.createdAt || Date.now(),
+          task.completedAt || null,
         ),
       ),
   };
 }
 
-function createTask(title, plan = activePlan, done = false, createdAt = Date.now()) {
+function createTask(
+  title,
+  plan = activePlan,
+  done = false,
+  createdAt = Date.now(),
+  completedAt = done ? Date.now() : null,
+) {
   return {
     id: crypto.randomUUID(),
     title: title.trim(),
     plan: PLANS[plan] ? plan : "today",
     done,
     createdAt,
+    completedAt,
   };
 }
 
@@ -275,9 +285,20 @@ function createTaskElement(task) {
   check.setAttribute("aria-label", `Отметить задачу "${task.title}"`);
   check.addEventListener("change", () => toggleTask(task.id));
 
+  const content = document.createElement("div");
+  content.className = "task-content";
+
   const title = document.createElement("div");
   title.className = "task-title";
   title.textContent = task.title;
+  content.append(title);
+
+  if (activePlan === "completed") {
+    const meta = document.createElement("div");
+    meta.className = "task-meta";
+    meta.textContent = `Выполнено: ${formatCompletedDate(task.completedAt || task.createdAt)}`;
+    content.append(meta);
+  }
 
   const actions = document.createElement("div");
   actions.className = "task-actions";
@@ -297,20 +318,33 @@ function createTaskElement(task) {
   deleteButton.addEventListener("click", () => deleteTask(task.id));
 
   actions.append(editButton, deleteButton);
-  item.append(check, title, actions);
+  item.append(check, content, actions);
   return item;
+}
+
+function formatCompletedDate(value) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(value));
 }
 
 async function toggleTask(id) {
   const target = state.tasks.find((task) => task.id === id);
   if (!target) return;
+  const nextDone = !target.done;
+  const completedAt = nextDone ? Date.now() : null;
 
   state.tasks = state.tasks.map((task) =>
-    task.id === id ? { ...task, done: !task.done } : task,
+    task.id === id ? { ...task, done: nextDone, completedAt } : task,
   );
 
   if (db) {
-    const { error } = await db.from("tasks").update({ done: !target.done }).eq("id", id);
+    const { error } = await db
+      .from("tasks")
+      .update({ done: nextDone, completed_at: completedAt ? new Date(completedAt).toISOString() : null })
+      .eq("id", id);
     if (error) console.warn("Could not update task", error);
   } else {
     saveState();
