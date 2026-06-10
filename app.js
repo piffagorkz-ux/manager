@@ -543,7 +543,7 @@ function tasksFor(plan) {
 
 function tasksForActiveView() {
   if (activePlan === "completed") return state.tasks.filter((task) => task.done);
-  if (activePlan === "settings") return [];
+  if (activePlan === "settings" || activePlan === "habits") return [];
   return tasksFor(activePlan).filter((task) => !task.done);
 }
 
@@ -553,12 +553,14 @@ function openPlan(plan) {
   } else {
     activePlan = plan;
     if (PLANS[plan]) activeWorkPlan = plan;
+    if (plan !== "habits") selectedHabitId = null;
   }
   render();
 }
 
 function topModeFor(plan) {
   if (plan === "completed") return "completed";
+  if (plan === "habits" || plan === "settings") return "";
   return "work";
 }
 
@@ -572,10 +574,11 @@ function render() {
   planTitle.textContent = current.title;
   planHint.textContent = current.hint;
   emptyHint.textContent = current.empty;
-  taskForm.hidden = activePlan === "completed" || activePlan === "settings";
-  taskList.hidden = activePlan === "settings";
-  emptyState.hidden = activePlan === "settings";
+  taskForm.hidden = activePlan === "completed" || activePlan === "settings" || activePlan === "habits";
+  taskList.hidden = activePlan === "settings" || activePlan === "habits";
+  emptyState.hidden = activePlan === "settings" || activePlan === "habits";
   settingsPanel.hidden = activePlan !== "settings";
+  habitsPanel.hidden = activePlan !== "habits";
   renderStaticText();
 
   tabs.forEach((tab) => {
@@ -586,10 +589,13 @@ function render() {
   planCards.forEach((card) => {
     const plan = card.dataset.planCard;
     card.classList.toggle("is-current", plan === activePlan);
-    card.querySelector("span").textContent = tasksFor(plan).filter((task) => !task.done).length;
+    card.querySelector("span").textContent =
+      plan === "habits"
+        ? state.habits.filter((habit) => !isHabitChecked(habit.id, todayISO())).length
+        : tasksFor(plan).filter((task) => !task.done).length;
   });
 
-  if (activePlan !== "settings") {
+  if (activePlan !== "settings" && activePlan !== "habits") {
     taskList.innerHTML = "";
     visibleTasks.forEach((task) => taskList.append(createTaskElement(task)));
     emptyState.classList.toggle("is-visible", visibleTasks.length === 0);
@@ -638,6 +644,8 @@ function renderSettingsState() {
 }
 
 function renderHabits() {
+  if (activePlan !== "habits") return;
+
   const text = habitText();
   const now = new Date();
   const year = now.getFullYear();

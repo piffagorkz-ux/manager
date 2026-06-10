@@ -77,21 +77,10 @@
             <span id="yearCount">0</span>
             <strong>Год</strong>
           </button>
-        </section>
-
-        <section class="habits-panel" id="habitsPanel" aria-label="Привычки">
-          <form class="habit-form" id="habitForm">
-            <input id="habitInput" type="text" placeholder="Новая привычка" autocomplete="off" required />
-            <label class="color-field" for="habitColor">
-              <span id="habitColorLabel">Цвет</span>
-              <input id="habitColor" type="color" value="#67c22f" aria-label="Цвет привычки" />
-            </label>
-            <button class="add-button habit-add-button" id="habitAddButton" type="submit">
-              <span class="add-icon" aria-hidden="true">+</span>
-              <span id="habitAddLabel">Добавить</span>
-            </button>
-          </form>
-          <div class="habit-list" id="habitList"></div>
+          <button class="plan-card" type="button" data-plan-card="habits">
+            <span id="habitsCount">0</span>
+            <strong>Привычки</strong>
+          </button>
         </section>
 
         <section class="list-panel" aria-live="polite">
@@ -105,6 +94,21 @@
           <div class="empty-state" id="emptyState">
             <h3>Здесь пока чисто</h3>
             <p id="emptyHint">Добавь одну задачу, которую действительно хочется сделать.</p>
+          </div>
+
+          <div class="habits-panel" id="habitsPanel" hidden>
+            <form class="habit-form" id="habitForm">
+              <input id="habitInput" type="text" placeholder="Новая привычка" autocomplete="off" required />
+              <label class="color-field" for="habitColor">
+                <span id="habitColorLabel">Цвет</span>
+                <input id="habitColor" type="color" value="#67c22f" aria-label="Цвет привычки" />
+              </label>
+              <button class="add-button habit-add-button" id="habitAddButton" type="submit">
+                <span class="add-icon" aria-hidden="true">+</span>
+                <span id="habitAddLabel">Добавить</span>
+              </button>
+            </form>
+            <div class="habit-list" id="habitList"></div>
           </div>
 
           <div class="settings-panel" id="settingsPanel" hidden>
