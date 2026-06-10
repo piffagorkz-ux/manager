@@ -239,13 +239,6 @@
                   <strong>Постоянный расход</strong>
                   <input id="monthlyExpenseTitle" type="text" placeholder="Название" autocomplete="off" required />
                   <input id="monthlyExpenseAmount" type="number" inputmode="decimal" placeholder="Сумма" required />
-                  <select id="monthlyExpenseCategory" required>
-                    <option value="Бензин">Бензин</option>
-                    <option value="Еда">Еда</option>
-                    <option value="Вкусняшки">Вкусняшки</option>
-                    <option value="Одежда">Одежда</option>
-                    <option value="Иное">Иное</option>
-                  </select>
                   <button class="quiet-button" type="submit">Добавить</button>
                   <div id="monthlyExpenseList" class="simple-list compact-list"></div>
                 </form>
@@ -269,10 +262,27 @@
                   <button class="money-button expense" type="submit">−</button>
                 </form>
               </div>
+              <section class="finance-analytics" aria-label="Аналитика расходов">
+                <div class="finance-donut" id="financeDonut">
+                  <span id="financeDonutTotal">0</span>
+                </div>
+                <div class="finance-legend">
+                  <div>
+                    <span class="legend-dot recurring"></span>
+                    <strong>Постоянные</strong>
+                    <small id="recurringExpenseValue">0</small>
+                  </div>
+                  <div>
+                    <span class="legend-dot extra"></span>
+                    <strong>Траты</strong>
+                    <small id="extraExpenseValue">0</small>
+                  </div>
+                </div>
+              </section>
               <div class="finance-lists">
                 <section>
-                  <h3>Дополнительные</h3>
-                  <div id="extraMoneyList" class="simple-list"></div>
+                  <h3>Выписка</h3>
+                  <div id="extraMoneyList" class="simple-list statement-list"></div>
                 </section>
               </div>
             </div>

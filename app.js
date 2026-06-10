@@ -281,6 +281,10 @@ const financeSummary = document.querySelector("#financeSummary");
 const monthlyIncomeList = document.querySelector("#monthlyIncomeList");
 const monthlyExpenseList = document.querySelector("#monthlyExpenseList");
 const extraMoneyList = document.querySelector("#extraMoneyList");
+const financeDonut = document.querySelector("#financeDonut");
+const financeDonutTotal = document.querySelector("#financeDonutTotal");
+const recurringExpenseValue = document.querySelector("#recurringExpenseValue");
+const extraExpenseValue = document.querySelector("#extraExpenseValue");
 const monthlyIncomeForm = document.querySelector("#monthlyIncomeForm");
 const monthlyExpenseForm = document.querySelector("#monthlyExpenseForm");
 const quickIncomeForm = document.querySelector("#quickIncomeForm");
@@ -784,8 +788,16 @@ function renderFinance() {
   const extraIncome = sumMoney(finance.extra, "income");
   const extraExpense = sumMoney(finance.extra, "expense");
   const balance = monthlyIncome + extraIncome - monthlyExpense - extraExpense;
+  const totalExpense = monthlyExpense + extraExpense;
+  const recurringShare = totalExpense ? Math.round((monthlyExpense / totalExpense) * 100) : 0;
 
   financeSummary.textContent = `Баланс месяца: ${formatMoney(balance)} · доходы ${formatMoney(monthlyIncome + extraIncome)} · расходы ${formatMoney(monthlyExpense + extraExpense)}`;
+  if (financeDonut.style?.setProperty) {
+    financeDonut.style.setProperty("--recurring-share", `${recurringShare}%`);
+  }
+  financeDonutTotal.textContent = formatMoney(totalExpense);
+  recurringExpenseValue.textContent = formatMoney(monthlyExpense);
+  extraExpenseValue.textContent = formatMoney(extraExpense);
   renderMoneyList(monthlyIncomeList, finance.monthly.filter((item) => item.type === "income"), "monthly");
   renderMoneyList(monthlyExpenseList, finance.monthly.filter((item) => item.type === "expense"), "monthly");
   renderMoneyList(extraMoneyList, finance.extra, "extra");
@@ -1380,7 +1392,6 @@ monthlyExpenseForm.addEventListener("submit", (event) => {
     "expense",
     document.querySelector("#monthlyExpenseTitle").value,
     document.querySelector("#monthlyExpenseAmount").value,
-    document.querySelector("#monthlyExpenseCategory").value,
   );
   monthlyExpenseForm.reset();
   monthlyExpenseForm.hidden = true;

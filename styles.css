@@ -767,6 +767,71 @@ select {
   gap: 12px;
 }
 
+.finance-analytics {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 88%, var(--bg));
+  padding: 14px;
+}
+
+.finance-donut {
+  --recurring-share: 0%;
+  width: 132px;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at center, var(--panel) 0 54%, transparent 55%),
+    conic-gradient(
+      color-mix(in srgb, var(--accent) 78%, var(--ink)) 0 var(--recurring-share),
+      color-mix(in srgb, #3ba55d 80%, var(--ink)) var(--recurring-share) 100%
+    );
+}
+
+.finance-donut span {
+  max-width: 76px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.finance-legend {
+  display: grid;
+  gap: 10px;
+}
+
+.finance-legend div {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.finance-legend small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.legend-dot.recurring {
+  background: color-mix(in srgb, var(--accent) 78%, var(--ink));
+}
+
+.legend-dot.extra {
+  background: color-mix(in srgb, #3ba55d 80%, var(--ink));
+}
+
 .compact-list {
   margin-top: 4px;
 }
@@ -782,6 +847,12 @@ select {
 .simple-list {
   display: grid;
   gap: 8px;
+}
+
+.statement-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .simple-row {
@@ -1272,9 +1343,14 @@ select {
   .finance-icon-actions,
   .finance-form-stack,
   .finance-lists,
+  .finance-analytics,
   .goal-columns,
   .goal-form {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .finance-donut {
+    justify-self: center;
   }
 
   .finance-icon-actions {
