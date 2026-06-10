@@ -103,10 +103,6 @@
             <span id="yearCount">0</span>
             <strong>Год</strong>
           </button>
-          <button class="plan-card" type="button" data-plan-card="habits">
-            <span id="habitsCount">0</span>
-            <strong>Привычки</strong>
-          </button>
         </section>
 
         <section class="list-panel" aria-live="polite">
@@ -216,11 +212,47 @@
           <section class="list-panel">
             <div class="list-head">
               <h2>Финансы</h2>
-              <p>Скоро здесь будут расходы, доходы и финансовые цели.</p>
+              <p id="financeSummary">Месяц под контролем.</p>
             </div>
-            <div class="module-placeholder">
-              <strong>Первый полезный шаг</strong>
-              <p>Сделаем быстрый ввод: сумма, категория, комментарий. Потом добавим бюджет месяца.</p>
+            <div class="finance-panel">
+              <div class="finance-actions">
+                <form class="mini-form" id="monthlyIncomeForm">
+                  <strong>Постоянный доход</strong>
+                  <input id="monthlyIncomeTitle" type="text" placeholder="Название" autocomplete="off" required />
+                  <input id="monthlyIncomeAmount" type="number" inputmode="decimal" placeholder="Сумма" required />
+                  <button class="quiet-button" type="submit">Добавить</button>
+                </form>
+                <form class="mini-form" id="monthlyExpenseForm">
+                  <strong>Постоянный расход</strong>
+                  <input id="monthlyExpenseTitle" type="text" placeholder="Название" autocomplete="off" required />
+                  <input id="monthlyExpenseAmount" type="number" inputmode="decimal" placeholder="Сумма" required />
+                  <button class="quiet-button" type="submit">Добавить</button>
+                </form>
+              </div>
+              <div class="quick-money">
+                <form class="mini-form" id="quickIncomeForm">
+                  <strong>Дополнительный плюс</strong>
+                  <input id="quickIncomeAmount" type="number" inputmode="decimal" placeholder="+ Сумма" required />
+                  <input id="quickIncomeNote" type="text" placeholder="Комментарий" autocomplete="off" />
+                  <button class="money-button income" type="submit">+</button>
+                </form>
+                <form class="mini-form" id="quickExpenseForm">
+                  <strong>Дополнительный минус</strong>
+                  <input id="quickExpenseAmount" type="number" inputmode="decimal" placeholder="- Сумма" required />
+                  <input id="quickExpenseNote" type="text" placeholder="Комментарий" autocomplete="off" />
+                  <button class="money-button expense" type="submit">−</button>
+                </form>
+              </div>
+              <div class="finance-lists">
+                <section>
+                  <h3>Постоянные</h3>
+                  <div id="monthlyMoneyList" class="simple-list"></div>
+                </section>
+                <section>
+                  <h3>Дополнительные</h3>
+                  <div id="extraMoneyList" class="simple-list"></div>
+                </section>
+              </div>
             </div>
           </section>
         </section>
@@ -230,11 +262,40 @@
           <section class="list-panel">
             <div class="list-head">
               <h2>Цели</h2>
-              <p>Большие направления отдельно от ежедневных задач.</p>
+              <p>Месяц, год и длинный горизонт отдельно от задач.</p>
             </div>
-            <div class="module-placeholder">
-              <strong>Структура цели</strong>
-              <p>Цель, срок, следующий шаг и прогресс. Так планы не будут теряться среди задач.</p>
+            <div class="goals-panel">
+              <form class="goal-form" id="goalForm">
+                <input id="goalTitle" type="text" placeholder="Новая цель" autocomplete="off" required />
+                <select id="goalHorizon" required>
+                  <option value="month">Месяц</option>
+                  <option value="year">Год</option>
+                  <option value="three">3 года</option>
+                  <option value="five">5 лет</option>
+                </select>
+                <button class="add-button" type="submit">
+                  <span class="add-icon" aria-hidden="true">+</span>
+                  <span>Добавить</span>
+                </button>
+              </form>
+              <div class="goal-columns">
+                <section>
+                  <h3>Месяц</h3>
+                  <div id="goalsMonth" class="simple-list"></div>
+                </section>
+                <section>
+                  <h3>Год</h3>
+                  <div id="goalsYear" class="simple-list"></div>
+                </section>
+                <section>
+                  <h3>3 года</h3>
+                  <div id="goalsThree" class="simple-list"></div>
+                </section>
+                <section>
+                  <h3>5 лет</h3>
+                  <div id="goalsFive" class="simple-list"></div>
+                </section>
+              </div>
             </div>
           </section>
         </section>

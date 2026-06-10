@@ -192,7 +192,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -555,6 +556,15 @@ button:focus-visible {
   margin-bottom: 0;
 }
 
+select {
+  min-height: 52px;
+  border: 1px solid color-mix(in srgb, var(--accent) 46%, var(--line));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 72%, var(--bg));
+  color: var(--ink);
+  padding: 0 14px;
+}
+
 .module-home {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -632,6 +642,124 @@ button:focus-visible {
 
 .module-placeholder p {
   margin-bottom: 0;
+}
+
+.finance-panel,
+.goals-panel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.finance-actions,
+.quick-money,
+.goal-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.goal-columns {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.mini-form,
+.goal-form {
+  display: grid;
+  gap: 9px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 86%, var(--bg));
+  padding: 12px;
+}
+
+.goal-form {
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 180px) auto;
+  align-items: center;
+}
+
+.mini-form strong,
+.finance-lists h3,
+.goal-columns h3 {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.money-button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+
+.money-button.income {
+  background: #3ba55d;
+}
+
+.money-button.expense {
+  background: var(--danger);
+}
+
+.finance-lists {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.finance-lists section,
+.goal-columns section {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.simple-list {
+  display: grid;
+  gap: 8px;
+}
+
+.simple-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  padding: 8px 10px;
+}
+
+.simple-row span {
+  overflow-wrap: anywhere;
+}
+
+.simple-row.income strong {
+  color: #3ba55d;
+}
+
+.simple-row.expense strong {
+  color: var(--danger);
+}
+
+.simple-row button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+}
+
+.simple-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
 }
 
 .module-shell.is-habits-module .tabs,
@@ -1069,6 +1197,14 @@ button:focus-visible {
 
   .choice-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .finance-actions,
+  .quick-money,
+  .finance-lists,
+  .goal-columns,
+  .goal-form {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .habits-panel {

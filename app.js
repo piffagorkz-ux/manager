@@ -1,4 +1,5 @@
 const STORAGE_KEY = "simple-plans-v2";
+const MODULE_STORAGE_KEY = "manager-modules-v1";
 const OLD_STORAGE_KEY = "codex-todo-tracker-v1";
 const LAST_OPENED_KEY = "simple-plans-last-opened";
 const THEME_KEY = "simple-plans-theme";
@@ -246,6 +247,20 @@ const financeModule = document.querySelector("#financeModule");
 const goalsModule = document.querySelector("#goalsModule");
 const moduleCards = document.querySelectorAll(".module-card");
 const moduleBacks = document.querySelectorAll("[data-module-back]");
+const financeSummary = document.querySelector("#financeSummary");
+const monthlyMoneyList = document.querySelector("#monthlyMoneyList");
+const extraMoneyList = document.querySelector("#extraMoneyList");
+const monthlyIncomeForm = document.querySelector("#monthlyIncomeForm");
+const monthlyExpenseForm = document.querySelector("#monthlyExpenseForm");
+const quickIncomeForm = document.querySelector("#quickIncomeForm");
+const quickExpenseForm = document.querySelector("#quickExpenseForm");
+const goalForm = document.querySelector("#goalForm");
+const goalLists = {
+  month: document.querySelector("#goalsMonth"),
+  year: document.querySelector("#goalsYear"),
+  three: document.querySelector("#goalsThree"),
+  five: document.querySelector("#goalsFive"),
+};
 
 let activeModule = "home";
 let activePlan = "today";
@@ -299,6 +314,15 @@ function createEmptyState() {
     tasks: [],
     habits: [],
     habitChecks: [],
+    finance: createEmptyFinance(),
+    goals: [],
+  };
+}
+
+function createEmptyFinance() {
+  return {
+    monthly: [],
+    extra: [],
   };
 }
 
@@ -352,6 +376,8 @@ async function loadRemoteState() {
     return loadLocalState();
   }
 
+  const moduleState = loadModuleState();
+
   return {
     lastOpened: localStorage.getItem(LAST_OPENED_KEY) || todayISO(),
     tasks: data.map((task) => ({
@@ -373,6 +399,56 @@ async function loadRemoteState() {
       date: check.check_date,
       createdAt: check.created_at ? new Date(check.created_at).getTime() : Date.now(),
     })),
+    finance: moduleState.finance,
+    goals: moduleState.goals,
+  };
+}
+
+function loadModuleState() {
+  const saved = localStorage.getItem(MODULE_STORAGE_KEY);
+  if (!saved) return { finance: createEmptyFinance(), goals: [] };
+
+  try {
+    const value = JSON.parse(saved);
+    return normalizeModuleState(value);
+  } catch {
+    return { finance: createEmptyFinance(), goals: [] };
+  }
+}
+
+function normalizeModuleState(value) {
+  const finance = value.finance || createEmptyFinance();
+  const monthly = Array.isArray(finance.monthly) ? finance.monthly : [];
+  const extra = Array.isArray(finance.extra) ? finance.extra : [];
+  const goals = Array.isArray(value.goals) ? value.goals : [];
+
+  return {
+    finance: {
+      monthly: monthly.map(normalizeMoneyItem).filter(Boolean),
+      extra: extra.map(normalizeMoneyItem).filter(Boolean),
+    },
+    goals: goals
+      .filter((goal) => goal && goal.title)
+      .map((goal) => ({
+        id: goal.id || crypto.randomUUID(),
+        title: String(goal.title).trim(),
+        horizon: ["month", "year", "three", "five"].includes(goal.horizon) ? goal.horizon : "month",
+        createdAt: goal.createdAt || Date.now(),
+      })),
+  };
+}
+
+function normalizeMoneyItem(item) {
+  if (!item) return null;
+  const amount = Number(item.amount);
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+
+  return {
+    id: item.id || crypto.randomUUID(),
+    title: String(item.title || item.note || "Запись").trim(),
+    amount,
+    type: item.type === "expense" ? "expense" : "income",
+    createdAt: item.createdAt || Date.now(),
   };
 }
 
@@ -386,6 +462,8 @@ function createInitialState() {
     ],
     habits: [createHabit("2 литра воды", "#67c22f")],
     habitChecks: [],
+    finance: createEmptyFinance(),
+    goals: [],
   };
 }
 
@@ -393,6 +471,7 @@ function normalizeState(value) {
   const tasks = Array.isArray(value.tasks) ? value.tasks : [];
   const habits = Array.isArray(value.habits) ? value.habits : [];
   const habitChecks = Array.isArray(value.habitChecks) ? value.habitChecks : [];
+  const moduleState = normalizeModuleState(value);
   return {
     lastOpened: value.lastOpened || todayISO(),
     tasks: tasks
@@ -420,6 +499,8 @@ function normalizeState(value) {
         date: check.date,
         createdAt: check.createdAt || Date.now(),
       })),
+    finance: moduleState.finance,
+    goals: moduleState.goals,
   };
 }
 
@@ -439,6 +520,8 @@ function migrateOldTasks(oldTasks) {
       ),
     habits: [],
     habitChecks: [],
+    finance: createEmptyFinance(),
+    goals: [],
   };
 }
 
@@ -479,6 +562,17 @@ function isISODate(value) {
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  saveModuleState();
+}
+
+function saveModuleState() {
+  localStorage.setItem(
+    MODULE_STORAGE_KEY,
+    JSON.stringify({
+      finance: state.finance || createEmptyFinance(),
+      goals: state.goals || [],
+    }),
+  );
 }
 
 async function rollTomorrowIntoToday() {
@@ -634,7 +728,98 @@ function render() {
     emptyState.classList.toggle("is-visible", visibleTasks.length === 0);
   }
   renderHabits();
+  renderFinance();
+  renderGoals();
   renderSettingsState();
+}
+
+function renderFinance() {
+  const finance = state.finance || createEmptyFinance();
+  const monthlyIncome = sumMoney(finance.monthly, "income");
+  const monthlyExpense = sumMoney(finance.monthly, "expense");
+  const extraIncome = sumMoney(finance.extra, "income");
+  const extraExpense = sumMoney(finance.extra, "expense");
+  const balance = monthlyIncome + extraIncome - monthlyExpense - extraExpense;
+
+  financeSummary.textContent = `Баланс месяца: ${formatMoney(balance)} · доходы ${formatMoney(monthlyIncome + extraIncome)} · расходы ${formatMoney(monthlyExpense + extraExpense)}`;
+  renderMoneyList(monthlyMoneyList, finance.monthly, "monthly");
+  renderMoneyList(extraMoneyList, finance.extra, "extra");
+}
+
+function renderMoneyList(container, items, group) {
+  container.innerHTML = "";
+  if (!items.length) {
+    const empty = document.createElement("p");
+    empty.className = "simple-empty";
+    empty.textContent = "Пока пусто";
+    container.append(empty);
+    return;
+  }
+
+  items
+    .slice()
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .forEach((item) => {
+      const row = document.createElement("div");
+      row.className = `simple-row ${item.type}`;
+
+      const title = document.createElement("span");
+      title.textContent = item.title;
+
+      const amount = document.createElement("strong");
+      amount.textContent = `${item.type === "income" ? "+" : "-"}${formatMoney(item.amount)}`;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "x";
+      remove.addEventListener("click", () => deleteMoneyItem(group, item.id));
+
+      row.append(title, amount, remove);
+      container.append(row);
+    });
+}
+
+function renderGoals() {
+  Object.entries(goalLists).forEach(([horizon, container]) => {
+    container.innerHTML = "";
+    const goals = (state.goals || []).filter((goal) => goal.horizon === horizon);
+    if (!goals.length) {
+      const empty = document.createElement("p");
+      empty.className = "simple-empty";
+      empty.textContent = "Пока пусто";
+      container.append(empty);
+      return;
+    }
+
+    goals
+      .slice()
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .forEach((goal) => {
+        const row = document.createElement("div");
+        row.className = "simple-row";
+
+        const title = document.createElement("span");
+        title.textContent = goal.title;
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "x";
+        remove.addEventListener("click", () => deleteGoal(goal.id));
+
+        row.append(title, remove);
+        container.append(row);
+      });
+  });
+}
+
+function sumMoney(items, type) {
+  return items.filter((item) => item.type === type).reduce((sum, item) => sum + item.amount, 0);
+}
+
+function formatMoney(value) {
+  return new Intl.NumberFormat(activeLang === "ru" ? "ru-RU" : "en-US", {
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 function renderStaticText() {
@@ -1042,6 +1227,46 @@ async function toggleHabitCheck(habitId, date, options = {}) {
   render();
 }
 
+function addMoneyItem(group, type, title, amount) {
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value <= 0) return;
+
+  if (!state.finance) state.finance = createEmptyFinance();
+  state.finance[group].push({
+    id: crypto.randomUUID(),
+    title: title.trim() || (type === "income" ? "Доход" : "Расход"),
+    amount: value,
+    type,
+    createdAt: Date.now(),
+  });
+  saveModuleState();
+  render();
+}
+
+function deleteMoneyItem(group, id) {
+  if (!state.finance) return;
+  state.finance[group] = state.finance[group].filter((item) => item.id !== id);
+  saveModuleState();
+  render();
+}
+
+function addGoal(title, horizon) {
+  state.goals.push({
+    id: crypto.randomUUID(),
+    title: title.trim(),
+    horizon,
+    createdAt: Date.now(),
+  });
+  saveModuleState();
+  render();
+}
+
+function deleteGoal(id) {
+  state.goals = state.goals.filter((goal) => goal.id !== id);
+  saveModuleState();
+  render();
+}
+
 taskForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const title = taskInput.value.trim();
@@ -1081,6 +1306,36 @@ habitForm.addEventListener("submit", async (event) => {
   habitForm.reset();
   habitColor.value = "#67c22f";
   habitInput.focus();
+});
+
+monthlyIncomeForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  addMoneyItem("monthly", "income", document.querySelector("#monthlyIncomeTitle").value, document.querySelector("#monthlyIncomeAmount").value);
+  monthlyIncomeForm.reset();
+});
+
+monthlyExpenseForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  addMoneyItem("monthly", "expense", document.querySelector("#monthlyExpenseTitle").value, document.querySelector("#monthlyExpenseAmount").value);
+  monthlyExpenseForm.reset();
+});
+
+quickIncomeForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  addMoneyItem("extra", "income", document.querySelector("#quickIncomeNote").value || "Дополнительный доход", document.querySelector("#quickIncomeAmount").value);
+  quickIncomeForm.reset();
+});
+
+quickExpenseForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  addMoneyItem("extra", "expense", document.querySelector("#quickExpenseNote").value || "Дополнительный расход", document.querySelector("#quickExpenseAmount").value);
+  quickExpenseForm.reset();
+});
+
+goalForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  addGoal(document.querySelector("#goalTitle").value, document.querySelector("#goalHorizon").value);
+  goalForm.reset();
 });
 
 tabs.forEach((tab) => {
