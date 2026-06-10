@@ -29,9 +29,18 @@
         </header>
 
         <nav class="tabs" aria-label="Периоды планирования">
-          <button class="tab is-active" type="button" data-plan="work">В работе</button>
-          <button class="tab" type="button" data-plan="completed">Выполненные</button>
-          <button class="tab" type="button" data-plan="settings">Настройки</button>
+          <button class="tab is-active" type="button" data-plan="work">
+            <span class="tab-icon" aria-hidden="true">●</span>
+            <span class="tab-label">В работе</span>
+          </button>
+          <button class="tab" type="button" data-plan="completed">
+            <span class="tab-icon" aria-hidden="true">✓</span>
+            <span class="tab-label">Выполненные</span>
+          </button>
+          <button class="tab" type="button" data-plan="settings">
+            <span class="tab-icon" aria-hidden="true">⚙</span>
+            <span class="tab-label">Настройки</span>
+          </button>
         </nav>
 
         <form class="add-form" id="taskForm">
@@ -42,7 +51,10 @@
             autocomplete="off"
             required
           />
-          <button class="add-button" type="submit">Добавить</button>
+          <button class="add-button" type="submit">
+            <span class="add-icon" aria-hidden="true">+</span>
+            <span class="add-label">Добавить</span>
+          </button>
         </form>
 
         <section class="overview" aria-label="Сводка по планам">

@@ -433,14 +433,14 @@ function renderStaticText() {
   document.title = text.appTitle;
   document.querySelector("h1").textContent = text.appTitle;
   taskInput.placeholder = text.addPlaceholder;
-  document.querySelector(".add-button").textContent = text.addButton;
+  document.querySelector(".add-label").textContent = text.addButton;
   clearDone.textContent = text.clearDone;
   themeTitle.textContent = text.themeTitle;
   languageTitle.textContent = text.languageTitle;
   cleanupTitle.textContent = text.cleanupTitle;
 
   tabs.forEach((tab) => {
-    tab.textContent = text.views[tab.dataset.plan].title;
+    tab.querySelector(".tab-label").textContent = text.views[tab.dataset.plan].title;
   });
 
   planCards.forEach((card) => {

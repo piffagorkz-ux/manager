@@ -129,7 +129,7 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
 }
 
 .date-line {
@@ -147,7 +147,7 @@ p {
 
 h1 {
   margin-bottom: 0;
-  font-size: clamp(2.4rem, 7vw, 4.8rem);
+  font-size: clamp(2.05rem, 5.95vw, 4.1rem);
   line-height: 0.95;
   letter-spacing: 0;
 }
@@ -183,18 +183,33 @@ h1 {
 .tabs {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 12px;
   overflow: visible;
   padding-bottom: 0;
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 
 .tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-width: 0;
   border: 1px solid transparent;
   background: transparent;
   color: var(--muted);
   padding: 10px 13px;
+}
+
+.tab-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  color: currentColor;
+  font-size: 0.88rem;
+  line-height: 1;
+  opacity: 0.86;
 }
 
 .tab.is-active {
@@ -207,8 +222,8 @@ h1 {
 .add-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-  padding: 10px;
+  gap: 12px;
+  padding: 12px;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -217,12 +232,13 @@ h1 {
 
 input {
   width: 100%;
-  min-height: 48px;
-  border: 0;
+  min-height: 52px;
+  border: 1px solid color-mix(in srgb, var(--accent) 46%, var(--line));
   border-radius: 8px;
-  background: var(--bg);
+  background: color-mix(in srgb, var(--panel) 72%, var(--bg));
   color: var(--ink);
-  padding: 0 14px;
+  padding: 0 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 input:focus,
@@ -232,7 +248,11 @@ button:focus-visible {
 }
 
 .add-button {
-  min-height: 48px;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: var(--accent);
   color: #fff;
   font-weight: 800;
@@ -243,11 +263,23 @@ button:focus-visible {
   background: var(--accent-ink);
 }
 
+.add-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .overview {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-  margin: 14px 0;
+  gap: 12px;
+  margin: 22px 0;
 }
 
 .plan-card {
@@ -495,11 +527,11 @@ button:focus-visible {
   .header {
     flex-direction: column;
     gap: 12px;
-    margin-bottom: 14px;
+    margin-bottom: 18px;
   }
 
   h1 {
-    font-size: clamp(2.7rem, 15vw, 4rem);
+    font-size: clamp(2.3rem, 12.75vw, 3.4rem);
   }
 
   .quiet-button {
@@ -510,9 +542,9 @@ button:focus-visible {
   .tabs {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 7px;
+    gap: 9px;
     overflow: visible;
-    margin: 0 0 10px;
+    margin: 0 0 14px;
     padding: 0;
   }
 
@@ -520,8 +552,14 @@ button:focus-visible {
     width: 100%;
     min-width: 0;
     min-height: 42px;
-    padding: 9px 8px;
+    gap: 6px;
+    padding: 9px 7px;
     text-align: center;
+  }
+
+  .tab-icon {
+    width: 16px;
+    height: 16px;
   }
 
   .add-form {
@@ -529,21 +567,21 @@ button:focus-visible {
     top: 8px;
     z-index: 3;
     grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-    padding: 8px;
+    gap: 9px;
+    padding: 9px;
   }
 
   input,
   .add-button {
-    min-height: 50px;
+    min-height: 52px;
   }
 
   .overview {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 7px;
+    gap: 9px;
     overflow: visible;
-    margin: 12px 0;
+    margin: 18px 0;
     padding: 0;
   }
 
