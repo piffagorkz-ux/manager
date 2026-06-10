@@ -107,7 +107,11 @@ const COPY = {
     edit: "Edit",
     editTitle: "Edit",
     deleteTitle: "Delete",
+    moveTitle: "Move",
+    moveUpTitle: "Move up",
+    moveDownTitle: "Move down",
     clearDone: "Clear completed",
+    confirmClearDone: "Delete all completed tasks?",
     settings: "Settings",
     themeTitle: "Theme",
     languageTitle: "Language",
@@ -264,8 +268,8 @@ function loadLocalState() {
 async function loadRemoteState() {
   const { data, error } = await db
     .from("tasks")
-    .select("id,title,plan,done,completed_at,created_at")
-    .order("created_at", { ascending: false });
+    .select("id,title,plan,done,completed_at,position,created_at")
+    .order("position", { ascending: true });
 
   if (error) {
     console.warn("Supabase unavailable, using localStorage", error);
@@ -281,6 +285,7 @@ async function loadRemoteState() {
       plan: task.plan,
       done: task.done,
       completedAt: task.completed_at ? new Date(task.completed_at).getTime() : null,
+      position: Number(task.position) || 0,
       createdAt: new Date(task.created_at).getTime(),
     })),
   };
@@ -303,12 +308,13 @@ function normalizeState(value) {
     lastOpened: value.lastOpened || todayISO(),
     tasks: tasks
       .filter((task) => task && task.title)
-      .map((task) => ({
+      .map((task, index) => ({
         id: task.id || crypto.randomUUID(),
         title: String(task.title).trim(),
         plan: PLANS[task.plan] ? task.plan : "today",
         done: Boolean(task.done),
         completedAt: task.completedAt || null,
+        position: Number.isFinite(Number(task.position)) ? Number(task.position) : index,
         createdAt: task.createdAt || Date.now(),
       })),
   };
@@ -326,6 +332,7 @@ function migrateOldTasks(oldTasks) {
           Boolean(task.done),
           task.createdAt || Date.now(),
           task.completedAt || null,
+          Number.isFinite(Number(task.position)) ? Number(task.position) : 0,
         ),
       ),
   };
@@ -337,6 +344,7 @@ function createTask(
   done = false,
   createdAt = Date.now(),
   completedAt = done ? Date.now() : null,
+  position = getNextPosition(plan),
 ) {
   return {
     id: crypto.randomUUID(),
@@ -345,11 +353,34 @@ function createTask(
     done,
     createdAt,
     completedAt,
+    position,
   };
 }
 
 function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function getNextPosition(plan) {
+  const positions = state.tasks
+    .filter((task) => task.plan === plan && !task.done)
+    .map((task) => Number(task.position) || 0);
+  return positions.length ? Math.max(...positions) + 1 : 0;
+}
+
+function getFirstPosition(plan) {
+  const positions = state.tasks
+    .filter((task) => task.plan === plan && !task.done)
+    .map((task) => Number(task.position) || 0);
+  return positions.length ? Math.min(...positions) - 1 : 0;
+}
+
+function orderedTasks(tasks) {
+  return [...tasks].sort((a, b) => {
+    const positionDiff = (Number(a.position) || 0) - (Number(b.position) || 0);
+    if (positionDiff !== 0) return positionDiff;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
 }
 
 async function rollTomorrowIntoToday() {
@@ -421,9 +452,12 @@ function topModeFor(plan) {
 
 function render() {
   const current = copy().views[activePlan];
-  const visibleTasks = tasksForActiveView().sort((a, b) => {
-    return b.createdAt - a.createdAt;
-  });
+  const visibleTasks =
+    activePlan === "completed"
+      ? [...tasksForActiveView()].sort(
+          (a, b) => (b.completedAt || b.createdAt) - (a.completedAt || a.createdAt),
+        )
+      : orderedTasks(tasksForActiveView());
 
   dateLine.textContent = readableDate();
   planTitle.textContent = current.title;
@@ -448,7 +482,9 @@ function render() {
 
   if (activePlan !== "settings") {
     taskList.innerHTML = "";
-    visibleTasks.forEach((task) => taskList.append(createTaskElement(task)));
+    visibleTasks.forEach((task, index) =>
+      taskList.append(createTaskElement(task, visibleTasks, index)),
+    );
     emptyState.classList.toggle("is-visible", visibleTasks.length === 0);
   }
   renderSettingsState();
@@ -490,7 +526,7 @@ function renderSettingsState() {
   });
 }
 
-function createTaskElement(task) {
+function createTaskElement(task, visibleTasks, index) {
   const item = document.createElement("li");
   item.className = `task-item${task.done ? " is-done" : ""}`;
 
@@ -499,7 +535,14 @@ function createTaskElement(task) {
   check.type = "checkbox";
   check.checked = task.done;
   check.setAttribute("aria-label", `Отметить задачу "${task.title}"`);
-  check.addEventListener("change", () => toggleTask(task.id));
+  check.addEventListener("change", () => {
+    if (!task.done && activePlan !== "completed") {
+      item.classList.add("is-leaving");
+      window.setTimeout(() => toggleTask(task.id), 140);
+      return;
+    }
+    toggleTask(task.id);
+  });
 
   const content = document.createElement("div");
   content.className = "task-content";
@@ -518,6 +561,44 @@ function createTaskElement(task) {
 
   const actions = document.createElement("div");
   actions.className = "task-actions";
+
+  if (activePlan !== "completed") {
+    const moveSelect = document.createElement("select");
+    moveSelect.className = "task-move";
+    moveSelect.title = copy().moveTitle || COPY.en.moveTitle;
+    moveSelect.setAttribute("aria-label", copy().moveTitle || COPY.en.moveTitle);
+    PLAN_KEYS.forEach((plan) => {
+      const option = document.createElement("option");
+      option.value = plan;
+      option.textContent = copy().views[plan].title;
+      option.selected = task.plan === plan;
+      moveSelect.append(option);
+    });
+    moveSelect.addEventListener("change", () => moveTaskToPlan(task.id, moveSelect.value));
+    actions.append(moveSelect);
+
+    const orderActions = document.createElement("div");
+    orderActions.className = "order-actions";
+
+    const upButton = document.createElement("button");
+    upButton.className = "task-action";
+    upButton.type = "button";
+    upButton.title = copy().moveUpTitle || COPY.en.moveUpTitle;
+    upButton.textContent = "↑";
+    upButton.disabled = index === 0;
+    upButton.addEventListener("click", () => moveTaskInPlan(task.id, -1));
+
+    const downButton = document.createElement("button");
+    downButton.className = "task-action";
+    downButton.type = "button";
+    downButton.title = copy().moveDownTitle || COPY.en.moveDownTitle;
+    downButton.textContent = "↓";
+    downButton.disabled = index === visibleTasks.length - 1;
+    downButton.addEventListener("click", () => moveTaskInPlan(task.id, 1));
+
+    orderActions.append(upButton, downButton);
+    actions.append(orderActions);
+  }
 
   const editButton = document.createElement("button");
   editButton.className = "task-action";
@@ -538,6 +619,59 @@ function createTaskElement(task) {
   return item;
 }
 
+async function saveTaskPatch(id, patch) {
+  if (db) {
+    const dbPatch = {};
+    if ("plan" in patch) dbPatch.plan = patch.plan;
+    if ("position" in patch) dbPatch.position = patch.position;
+    if ("done" in patch) dbPatch.done = patch.done;
+    if ("title" in patch) dbPatch.title = patch.title;
+    if ("completedAt" in patch) {
+      dbPatch.completed_at = patch.completedAt ? new Date(patch.completedAt).toISOString() : null;
+    }
+    const { error } = await db.from("tasks").update(dbPatch).eq("id", id);
+    if (error) console.warn("Could not update task", error);
+  } else {
+    saveState();
+  }
+}
+
+async function persistPositions(tasks) {
+  const updates = tasks.map((task, index) => ({ ...task, position: index }));
+  state.tasks = state.tasks.map((task) => updates.find((item) => item.id === task.id) || task);
+
+  if (db) {
+    await Promise.all(
+      updates.map((task) => saveTaskPatch(task.id, { position: task.position })),
+    );
+  } else {
+    saveState();
+  }
+}
+
+async function moveTaskToPlan(id, plan) {
+  if (!PLANS[plan]) return;
+  const nextPosition = getNextPosition(plan);
+  state.tasks = state.tasks.map((task) =>
+    task.id === id ? { ...task, plan, position: nextPosition } : task,
+  );
+  await saveTaskPatch(id, { plan, position: nextPosition });
+  render();
+}
+
+async function moveTaskInPlan(id, direction) {
+  const currentTasks = orderedTasks(tasksFor(activePlan).filter((task) => !task.done));
+  const index = currentTasks.findIndex((task) => task.id === id);
+  const targetIndex = index + direction;
+  if (index < 0 || targetIndex < 0 || targetIndex >= currentTasks.length) return;
+
+  const reordered = [...currentTasks];
+  const [task] = reordered.splice(index, 1);
+  reordered.splice(targetIndex, 0, task);
+  await persistPositions(reordered);
+  render();
+}
+
 function formatCompletedDate(value) {
   return new Intl.DateTimeFormat(activeLang === "ru" ? "ru-RU" : "en-US", {
     day: "numeric",
@@ -551,20 +685,13 @@ async function toggleTask(id) {
   if (!target) return;
   const nextDone = !target.done;
   const completedAt = nextDone ? Date.now() : null;
+  const nextPosition = nextDone ? target.position : getNextPosition(target.plan);
 
   state.tasks = state.tasks.map((task) =>
-    task.id === id ? { ...task, done: nextDone, completedAt } : task,
+    task.id === id ? { ...task, done: nextDone, completedAt, position: nextPosition } : task,
   );
 
-  if (db) {
-    const { error } = await db
-      .from("tasks")
-      .update({ done: nextDone, completed_at: completedAt ? new Date(completedAt).toISOString() : null })
-      .eq("id", id);
-    if (error) console.warn("Could not update task", error);
-  } else {
-    saveState();
-  }
+  await saveTaskPatch(id, { done: nextDone, completedAt, position: nextPosition });
 
   render();
 }
@@ -591,12 +718,7 @@ async function editTask(id) {
 
   task.title = nextTitle.trim();
 
-  if (db) {
-    const { error } = await db.from("tasks").update({ title: task.title }).eq("id", id);
-    if (error) console.warn("Could not edit task", error);
-  } else {
-    saveState();
-  }
+  await saveTaskPatch(id, { title: task.title });
 
   render();
 }
@@ -606,13 +728,13 @@ taskForm.addEventListener("submit", async (event) => {
   const title = taskInput.value.trim();
   if (!title) return;
 
-  const task = createTask(title);
+  const task = createTask(title, activePlan, false, Date.now(), null, getFirstPosition(activePlan));
   state.tasks.unshift(task);
 
   if (db) {
     const { data, error } = await db
       .from("tasks")
-      .insert({ title: task.title, plan: task.plan, done: task.done })
+      .insert({ title: task.title, plan: task.plan, done: task.done, position: task.position })
       .select("id,created_at")
       .single();
 
@@ -670,6 +792,9 @@ langChoices.forEach((button) => {
 
 clearDone.addEventListener("click", async () => {
   const doneIds = state.tasks.filter((task) => task.done).map((task) => task.id);
+  if (!doneIds.length) return;
+  if (!confirm(copy().confirmClearDone || COPY.en.confirmClearDone)) return;
+
   state.tasks = state.tasks.filter((task) => !task.done);
 
   if (db && doneIds.length) {
