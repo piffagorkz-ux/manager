@@ -651,12 +651,19 @@ select {
   padding: 18px;
 }
 
-.finance-actions,
-.quick-money,
+.finance-icon-actions,
+.finance-form-stack,
 .goal-columns {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+}
+
+.finance-icon-actions {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.finance-form-stack {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .goal-columns {
@@ -701,6 +708,28 @@ select {
 
 .money-button.expense {
   background: var(--danger);
+}
+
+.finance-icon-button {
+  min-height: 58px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.finance-icon-button.income {
+  color: #3ba55d;
+}
+
+.finance-icon-button.expense {
+  color: var(--danger);
+}
+
+.finance-entry-form[hidden] {
+  display: none;
 }
 
 .finance-lists {
@@ -1199,12 +1228,16 @@ select {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .finance-actions,
-  .quick-money,
+  .finance-icon-actions,
+  .finance-form-stack,
   .finance-lists,
   .goal-columns,
   .goal-form {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .finance-icon-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .habits-panel {

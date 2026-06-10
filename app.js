@@ -254,6 +254,8 @@ const monthlyIncomeForm = document.querySelector("#monthlyIncomeForm");
 const monthlyExpenseForm = document.querySelector("#monthlyExpenseForm");
 const quickIncomeForm = document.querySelector("#quickIncomeForm");
 const quickExpenseForm = document.querySelector("#quickExpenseForm");
+const financeFormButtons = document.querySelectorAll("[data-finance-form]");
+const financeEntryForms = document.querySelectorAll(".finance-entry-form");
 const goalForm = document.querySelector("#goalForm");
 const goalLists = {
   month: document.querySelector("#goalsMonth"),
@@ -448,6 +450,7 @@ function normalizeMoneyItem(item) {
     title: String(item.title || item.note || "Запись").trim(),
     amount,
     type: item.type === "expense" ? "expense" : "income",
+    category: item.category || "",
     createdAt: item.createdAt || Date.now(),
   };
 }
@@ -764,7 +767,7 @@ function renderMoneyList(container, items, group) {
       row.className = `simple-row ${item.type}`;
 
       const title = document.createElement("span");
-      title.textContent = item.title;
+      title.textContent = item.category ? `${item.title} · ${item.category}` : item.title;
 
       const amount = document.createElement("strong");
       amount.textContent = `${item.type === "income" ? "+" : "-"}${formatMoney(item.amount)}`;
@@ -1227,7 +1230,7 @@ async function toggleHabitCheck(habitId, date, options = {}) {
   render();
 }
 
-function addMoneyItem(group, type, title, amount) {
+function addMoneyItem(group, type, title, amount, category = "") {
   const value = Number(amount);
   if (!Number.isFinite(value) || value <= 0) return;
 
@@ -1237,6 +1240,7 @@ function addMoneyItem(group, type, title, amount) {
     title: title.trim() || (type === "income" ? "Доход" : "Расход"),
     amount: value,
     type,
+    category: type === "expense" ? category : "",
     createdAt: Date.now(),
   });
   saveModuleState();
@@ -1308,28 +1312,56 @@ habitForm.addEventListener("submit", async (event) => {
   habitInput.focus();
 });
 
+financeFormButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const target = document.querySelector(`#${button.dataset.financeForm}`);
+    const willOpen = target.hidden;
+    financeEntryForms.forEach((form) => {
+      form.hidden = true;
+    });
+    target.hidden = !willOpen;
+    button.blur();
+  });
+});
+
 monthlyIncomeForm.addEventListener("submit", (event) => {
   event.preventDefault();
   addMoneyItem("monthly", "income", document.querySelector("#monthlyIncomeTitle").value, document.querySelector("#monthlyIncomeAmount").value);
   monthlyIncomeForm.reset();
+  monthlyIncomeForm.hidden = true;
 });
 
 monthlyExpenseForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  addMoneyItem("monthly", "expense", document.querySelector("#monthlyExpenseTitle").value, document.querySelector("#monthlyExpenseAmount").value);
+  addMoneyItem(
+    "monthly",
+    "expense",
+    document.querySelector("#monthlyExpenseTitle").value,
+    document.querySelector("#monthlyExpenseAmount").value,
+    document.querySelector("#monthlyExpenseCategory").value,
+  );
   monthlyExpenseForm.reset();
+  monthlyExpenseForm.hidden = true;
 });
 
 quickIncomeForm.addEventListener("submit", (event) => {
   event.preventDefault();
   addMoneyItem("extra", "income", document.querySelector("#quickIncomeNote").value || "Дополнительный доход", document.querySelector("#quickIncomeAmount").value);
   quickIncomeForm.reset();
+  quickIncomeForm.hidden = true;
 });
 
 quickExpenseForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  addMoneyItem("extra", "expense", document.querySelector("#quickExpenseNote").value || "Дополнительный расход", document.querySelector("#quickExpenseAmount").value);
+  addMoneyItem(
+    "extra",
+    "expense",
+    document.querySelector("#quickExpenseNote").value || "Дополнительный расход",
+    document.querySelector("#quickExpenseAmount").value,
+    document.querySelector("#quickExpenseCategory").value,
+  );
   quickExpenseForm.reset();
+  quickExpenseForm.hidden = true;
 });
 
 goalForm.addEventListener("submit", (event) => {
