@@ -169,6 +169,48 @@ const COPY = {
   },
 };
 
+COPY.ru.views.habits = {
+  title: "Привычки",
+  hint: "Ежедневные отметки квадратами: день, месяц и год в одном спокойном виде.",
+  empty: "",
+};
+COPY.en.views.habits = {
+  title: "Habits",
+  hint: "Daily square marks with a clean month and year overview.",
+  empty: "",
+};
+
+const HABIT_COPY = {
+  ru: {
+    placeholder: "Новая привычка",
+    color: "Цвет",
+    add: "Добавить",
+    today: "Сегодня",
+    doneToday: "Отмечено сегодня",
+    markToday: "Отметить сегодня",
+    unmarkToday: "Убрать отметку",
+    month: "Месяц",
+    year: "Год",
+    empty: "Добавь первую привычку, например: 2 литра воды.",
+    delete: "Удалить",
+    completed: "дней",
+  },
+  en: {
+    placeholder: "New habit",
+    color: "Color",
+    add: "Add",
+    today: "Today",
+    doneToday: "Done today",
+    markToday: "Mark today",
+    unmarkToday: "Unmark",
+    month: "Month",
+    year: "Year",
+    empty: "Add your first habit, for example: 2 liters of water.",
+    delete: "Delete",
+    completed: "days",
+  },
+};
+
 const taskForm = document.querySelector("#taskForm");
 const taskInput = document.querySelector("#taskInput");
 const taskList = document.querySelector("#taskList");
@@ -181,6 +223,13 @@ const planTitle = document.querySelector("#planTitle");
 const planHint = document.querySelector("#planHint");
 const dateLine = document.querySelector("#dateLine");
 const settingsPanel = document.querySelector("#settingsPanel");
+const habitsPanel = document.querySelector("#habitsPanel");
+const habitForm = document.querySelector("#habitForm");
+const habitInput = document.querySelector("#habitInput");
+const habitColor = document.querySelector("#habitColor");
+const habitColorLabel = document.querySelector("#habitColorLabel");
+const habitAddLabel = document.querySelector("#habitAddLabel");
+const habitList = document.querySelector("#habitList");
 const themeChoices = document.querySelectorAll(".theme-choice");
 const langChoices = document.querySelectorAll(".lang-choice");
 const themeTitle = document.querySelector("#themeTitle");
@@ -236,6 +285,8 @@ function createEmptyState() {
   return {
     lastOpened: todayISO(),
     tasks: [],
+    habits: [],
+    habitChecks: [],
   };
 }
 
@@ -273,6 +324,22 @@ async function loadRemoteState() {
     return loadLocalState();
   }
 
+  const { data: habitsData, error: habitsError } = await db
+    .from("habits")
+    .select("id,title,color,created_at")
+    .order("created_at", { ascending: true });
+
+  const { data: checksData, error: checksError } = await db
+    .from("habit_checks")
+    .select("habit_id,check_date,created_at")
+    .order("check_date", { ascending: true });
+
+  if (habitsError || checksError) {
+    console.warn("Supabase habits unavailable, using localStorage", habitsError || checksError);
+    db = null;
+    return loadLocalState();
+  }
+
   return {
     lastOpened: localStorage.getItem(LAST_OPENED_KEY) || todayISO(),
     tasks: data.map((task) => ({
@@ -282,6 +349,17 @@ async function loadRemoteState() {
       done: task.done,
       completedAt: task.completed_at ? new Date(task.completed_at).getTime() : null,
       createdAt: new Date(task.created_at).getTime(),
+    })),
+    habits: habitsData.map((habit) => ({
+      id: habit.id,
+      title: habit.title,
+      color: normalizeHabitColor(habit.color),
+      createdAt: new Date(habit.created_at).getTime(),
+    })),
+    habitChecks: checksData.map((check) => ({
+      habitId: check.habit_id,
+      date: check.check_date,
+      createdAt: check.created_at ? new Date(check.created_at).getTime() : Date.now(),
     })),
   };
 }
@@ -294,11 +372,15 @@ function createInitialState() {
       createTask("Подготовить план на завтра", "tomorrow"),
       createTask("Определить цель месяца", "month"),
     ],
+    habits: [createHabit("2 литра воды", "#67c22f")],
+    habitChecks: [],
   };
 }
 
 function normalizeState(value) {
   const tasks = Array.isArray(value.tasks) ? value.tasks : [];
+  const habits = Array.isArray(value.habits) ? value.habits : [];
+  const habitChecks = Array.isArray(value.habitChecks) ? value.habitChecks : [];
   return {
     lastOpened: value.lastOpened || todayISO(),
     tasks: tasks
@@ -310,6 +392,21 @@ function normalizeState(value) {
         done: Boolean(task.done),
         completedAt: task.completedAt || null,
         createdAt: task.createdAt || Date.now(),
+      })),
+    habits: habits
+      .filter((habit) => habit && habit.title)
+      .map((habit) => ({
+        id: habit.id || crypto.randomUUID(),
+        title: String(habit.title).trim(),
+        color: normalizeHabitColor(habit.color),
+        createdAt: habit.createdAt || Date.now(),
+      })),
+    habitChecks: habitChecks
+      .filter((check) => check && check.habitId && isISODate(check.date))
+      .map((check) => ({
+        habitId: check.habitId,
+        date: check.date,
+        createdAt: check.createdAt || Date.now(),
       })),
   };
 }
@@ -328,6 +425,8 @@ function migrateOldTasks(oldTasks) {
           task.completedAt || null,
         ),
       ),
+    habits: [],
+    habitChecks: [],
   };
 }
 
@@ -346,6 +445,24 @@ function createTask(
     createdAt,
     completedAt,
   };
+}
+
+function createHabit(title, color = "#67c22f", createdAt = Date.now()) {
+  return {
+    id: crypto.randomUUID(),
+    title: title.trim(),
+    color: normalizeHabitColor(color),
+    createdAt,
+  };
+}
+
+function normalizeHabitColor(color) {
+  const value = String(color || "").trim();
+  return /^#[0-9a-f]{6}$/i.test(value) ? value : "#67c22f";
+}
+
+function isISODate(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || ""));
 }
 
 function saveState() {
@@ -394,13 +511,34 @@ function readableDate() {
   }).format(new Date());
 }
 
+function dateISO(year, monthIndex, day) {
+  const month = String(monthIndex + 1).padStart(2, "0");
+  const date = String(day).padStart(2, "0");
+  return `${year}-${month}-${date}`;
+}
+
+function daysInMonth(year, monthIndex) {
+  return new Date(year, monthIndex + 1, 0).getDate();
+}
+
+function formatMonthName(year, monthIndex) {
+  return new Intl.DateTimeFormat(activeLang === "ru" ? "ru-RU" : "en-US", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date(year, monthIndex, 1));
+}
+
+function habitText() {
+  return HABIT_COPY[activeLang] || HABIT_COPY.ru;
+}
+
 function tasksFor(plan) {
   return state.tasks.filter((task) => task.plan === plan);
 }
 
 function tasksForActiveView() {
   if (activePlan === "completed") return state.tasks.filter((task) => task.done);
-  if (activePlan === "settings") return [];
+  if (activePlan === "settings" || activePlan === "habits") return [];
   return tasksFor(activePlan).filter((task) => !task.done);
 }
 
@@ -416,6 +554,7 @@ function openPlan(plan) {
 
 function topModeFor(plan) {
   if (plan === "completed") return "completed";
+  if (plan === "habits") return "habits";
   return "work";
 }
 
@@ -429,10 +568,11 @@ function render() {
   planTitle.textContent = current.title;
   planHint.textContent = current.hint;
   emptyHint.textContent = current.empty;
-  taskForm.hidden = activePlan === "completed" || activePlan === "settings";
-  taskList.hidden = activePlan === "settings";
-  emptyState.hidden = activePlan === "settings";
+  taskForm.hidden = activePlan === "completed" || activePlan === "settings" || activePlan === "habits";
+  taskList.hidden = activePlan === "settings" || activePlan === "habits";
+  emptyState.hidden = activePlan === "settings" || activePlan === "habits";
   settingsPanel.hidden = activePlan !== "settings";
+  habitsPanel.hidden = activePlan !== "habits";
   renderStaticText();
 
   tabs.forEach((tab) => {
@@ -446,11 +586,12 @@ function render() {
     card.querySelector("span").textContent = tasksFor(plan).filter((task) => !task.done).length;
   });
 
-  if (activePlan !== "settings") {
+  if (activePlan !== "settings" && activePlan !== "habits") {
     taskList.innerHTML = "";
     visibleTasks.forEach((task) => taskList.append(createTaskElement(task)));
     emptyState.classList.toggle("is-visible", visibleTasks.length === 0);
   }
+  renderHabits();
   renderSettingsState();
 }
 
@@ -466,6 +607,9 @@ function renderStaticText() {
   themeTitle.textContent = text.themeTitle;
   languageTitle.textContent = text.languageTitle;
   cleanupTitle.textContent = text.cleanupTitle;
+  habitInput.placeholder = habitText().placeholder;
+  habitColorLabel.textContent = habitText().color;
+  habitAddLabel.textContent = habitText().add;
 
   tabs.forEach((tab) => {
     tab.querySelector(".tab-label").textContent = text.views[tab.dataset.plan].title;
@@ -488,6 +632,140 @@ function renderSettingsState() {
   langChoices.forEach((button) => {
     button.classList.toggle("is-selected", button.dataset.lang === activeLang);
   });
+}
+
+function renderHabits() {
+  if (activePlan !== "habits") return;
+
+  const text = habitText();
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const today = todayISO();
+
+  habitList.innerHTML = "";
+
+  if (!state.habits.length) {
+    const empty = document.createElement("div");
+    empty.className = "habit-empty";
+    empty.textContent = text.empty;
+    habitList.append(empty);
+    return;
+  }
+
+  state.habits
+    .slice()
+    .sort((a, b) => a.createdAt - b.createdAt)
+    .forEach((habit) => {
+      habitList.append(createHabitElement(habit, year, month, today));
+    });
+}
+
+function createHabitElement(habit, year, month, today) {
+  const text = habitText();
+  const card = document.createElement("article");
+  card.className = "habit-card";
+  card.style.setProperty("--habit-color", habit.color);
+
+  const head = document.createElement("div");
+  head.className = "habit-head";
+
+  const titleWrap = document.createElement("div");
+  titleWrap.className = "habit-title-wrap";
+
+  const dot = document.createElement("span");
+  dot.className = "habit-dot";
+
+  const title = document.createElement("h3");
+  title.textContent = habit.title;
+
+  titleWrap.append(dot, title);
+
+  const actions = document.createElement("div");
+  actions.className = "habit-actions";
+
+  const todayButton = document.createElement("button");
+  todayButton.className = "habit-today";
+  todayButton.type = "button";
+  todayButton.textContent = isHabitChecked(habit.id, today) ? text.doneToday : text.today;
+  todayButton.title = isHabitChecked(habit.id, today) ? text.unmarkToday : text.markToday;
+  todayButton.classList.toggle("is-checked", isHabitChecked(habit.id, today));
+  todayButton.addEventListener("click", () => toggleHabitCheck(habit.id, today));
+
+  const deleteButton = document.createElement("button");
+  deleteButton.className = "habit-delete";
+  deleteButton.type = "button";
+  deleteButton.title = text.delete;
+  deleteButton.textContent = "x";
+  deleteButton.addEventListener("click", () => deleteHabit(habit.id));
+
+  actions.append(todayButton, deleteButton);
+  head.append(titleWrap, actions);
+
+  const monthBlock = document.createElement("div");
+  monthBlock.className = "habit-block";
+
+  const monthTitle = document.createElement("div");
+  monthTitle.className = "habit-block-title";
+  monthTitle.textContent = `${text.month}: ${formatMonthName(year, month)}`;
+
+  const monthGrid = document.createElement("div");
+  monthGrid.className = "habit-month-grid";
+  const days = daysInMonth(year, month);
+  for (let day = 1; day <= days; day += 1) {
+    const date = dateISO(year, month, day);
+    monthGrid.append(createHabitDay(habit.id, date, day, date === today));
+  }
+
+  monthBlock.append(monthTitle, monthGrid);
+
+  const yearBlock = document.createElement("div");
+  yearBlock.className = "habit-block";
+
+  const yearTitle = document.createElement("div");
+  yearTitle.className = "habit-block-title";
+  yearTitle.textContent = `${text.year}: ${year}`;
+
+  const yearGrid = document.createElement("div");
+  yearGrid.className = "habit-year-grid";
+  for (let monthIndex = 0; monthIndex < 12; monthIndex += 1) {
+    yearGrid.append(createHabitMonthCell(habit.id, year, monthIndex));
+  }
+
+  yearBlock.append(yearTitle, yearGrid);
+  card.append(head, monthBlock, yearBlock);
+  return card;
+}
+
+function createHabitDay(habitId, date, day, isToday) {
+  const button = document.createElement("button");
+  button.className = "habit-day";
+  button.type = "button";
+  button.textContent = day;
+  button.classList.toggle("is-checked", isHabitChecked(habitId, date));
+  button.classList.toggle("is-today", isToday);
+  button.setAttribute("aria-label", date);
+  button.addEventListener("click", () => toggleHabitCheck(habitId, date));
+  return button;
+}
+
+function createHabitMonthCell(habitId, year, monthIndex) {
+  const cell = document.createElement("div");
+  cell.className = "habit-month-cell";
+  const days = daysInMonth(year, monthIndex);
+  let completed = 0;
+  for (let day = 1; day <= days; day += 1) {
+    if (isHabitChecked(habitId, dateISO(year, monthIndex, day))) completed += 1;
+  }
+  const ratio = completed / days;
+  cell.style.opacity = String(Math.max(0.22, ratio || 0.12));
+  cell.title = `${completed}/${days}`;
+  cell.textContent = String(monthIndex + 1);
+  return cell;
+}
+
+function isHabitChecked(habitId, date) {
+  return state.habitChecks.some((check) => check.habitId === habitId && check.date === date);
 }
 
 function createTaskElement(task) {
@@ -601,6 +879,68 @@ async function editTask(id) {
   render();
 }
 
+async function addHabit(title, color) {
+  const habit = createHabit(title, color);
+  state.habits.push(habit);
+
+  if (db) {
+    const { data, error } = await db
+      .from("habits")
+      .insert({ title: habit.title, color: habit.color })
+      .select("id,created_at")
+      .single();
+
+    if (error) {
+      console.warn("Could not add habit", error);
+    } else {
+      habit.id = data.id;
+      habit.createdAt = new Date(data.created_at).getTime();
+    }
+  } else {
+    saveState();
+  }
+
+  render();
+}
+
+async function deleteHabit(id) {
+  state.habits = state.habits.filter((habit) => habit.id !== id);
+  state.habitChecks = state.habitChecks.filter((check) => check.habitId !== id);
+
+  if (db) {
+    const { error } = await db.from("habits").delete().eq("id", id);
+    if (error) console.warn("Could not delete habit", error);
+  } else {
+    saveState();
+  }
+
+  render();
+}
+
+async function toggleHabitCheck(habitId, date) {
+  const exists = isHabitChecked(habitId, date);
+
+  if (exists) {
+    state.habitChecks = state.habitChecks.filter(
+      (check) => !(check.habitId === habitId && check.date === date),
+    );
+  } else {
+    state.habitChecks.push({ habitId, date, createdAt: Date.now() });
+  }
+
+  if (db) {
+    const request = exists
+      ? db.from("habit_checks").delete().eq("habit_id", habitId).eq("check_date", date)
+      : db.from("habit_checks").insert({ habit_id: habitId, check_date: date });
+    const { error } = await request;
+    if (error) console.warn("Could not update habit check", error);
+  } else {
+    saveState();
+  }
+
+  render();
+}
+
 taskForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const title = taskInput.value.trim();
@@ -629,6 +969,17 @@ taskForm.addEventListener("submit", async (event) => {
   taskForm.reset();
   taskInput.focus();
   render();
+});
+
+habitForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const title = habitInput.value.trim();
+  if (!title) return;
+
+  await addHabit(title, habitColor.value);
+  habitForm.reset();
+  habitColor.value = "#67c22f";
+  habitInput.focus();
 });
 
 tabs.forEach((tab) => {

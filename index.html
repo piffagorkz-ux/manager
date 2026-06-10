@@ -40,6 +40,10 @@
             <span class="tab-icon" aria-hidden="true">✓</span>
             <span class="tab-label">Выполненные</span>
           </button>
+          <button class="tab" type="button" data-plan="habits">
+            <span class="tab-icon" aria-hidden="true">▦</span>
+            <span class="tab-label">Привычки</span>
+          </button>
         </nav>
 
         <form class="add-form" id="taskForm">
@@ -90,6 +94,21 @@
           <div class="empty-state" id="emptyState">
             <h3>Здесь пока чисто</h3>
             <p id="emptyHint">Добавь одну задачу, которую действительно хочется сделать.</p>
+          </div>
+
+          <div class="habits-panel" id="habitsPanel" hidden>
+            <form class="habit-form" id="habitForm">
+              <input id="habitInput" type="text" placeholder="Новая привычка" autocomplete="off" required />
+              <label class="color-field" for="habitColor">
+                <span id="habitColorLabel">Цвет</span>
+                <input id="habitColor" type="color" value="#67c22f" aria-label="Цвет привычки" />
+              </label>
+              <button class="add-button habit-add-button" id="habitAddButton" type="submit">
+                <span class="add-icon" aria-hidden="true">+</span>
+                <span id="habitAddLabel">Добавить</span>
+              </button>
+            </form>
+            <div class="habit-list" id="habitList"></div>
           </div>
 
           <div class="settings-panel" id="settingsPanel" hidden>
