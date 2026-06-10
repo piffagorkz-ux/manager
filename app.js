@@ -240,7 +240,14 @@ const themeTitle = document.querySelector("#themeTitle");
 const languageTitle = document.querySelector("#languageTitle");
 const cleanupTitle = document.querySelector("#cleanupTitle");
 const settingsButton = document.querySelector("#settingsButton");
+const homePanel = document.querySelector("#homePanel");
+const plannerModule = document.querySelector("#plannerModule");
+const financeModule = document.querySelector("#financeModule");
+const goalsModule = document.querySelector("#goalsModule");
+const moduleCards = document.querySelectorAll(".module-card");
+const moduleBacks = document.querySelectorAll("[data-module-back]");
 
+let activeModule = "home";
 let activePlan = "today";
 let activeWorkPlan = "today";
 let state = createEmptyState();
@@ -558,6 +565,26 @@ function openPlan(plan) {
   render();
 }
 
+function openModule(module) {
+  activeModule = module;
+
+  if (module === "planner") {
+    activePlan = activeWorkPlan;
+  }
+
+  if (module === "habits") {
+    activePlan = "habits";
+  }
+
+  render();
+}
+
+function openHome() {
+  activeModule = "home";
+  selectedHabitId = null;
+  render();
+}
+
 function topModeFor(plan) {
   if (plan === "completed") return "completed";
   if (plan === "habits" || plan === "settings") return "";
@@ -569,6 +596,12 @@ function render() {
   const visibleTasks = tasksForActiveView().sort((a, b) => {
     return b.createdAt - a.createdAt;
   });
+
+  homePanel.hidden = activeModule !== "home";
+  plannerModule.hidden = !["planner", "habits"].includes(activeModule);
+  plannerModule.classList.toggle("is-habits-module", activeModule === "habits");
+  financeModule.hidden = activeModule !== "finance";
+  goalsModule.hidden = activeModule !== "goals";
 
   dateLine.textContent = readableDate();
   planTitle.textContent = current.title;
@@ -607,7 +640,8 @@ function render() {
 function renderStaticText() {
   const text = copy();
   document.title = text.appTitle;
-  document.querySelector("h1").textContent = text.appTitle;
+  document.querySelector("h1").textContent =
+    activeModule === "home" ? (activeLang === "ru" ? "Менеджер" : "Manager") : text.appTitle;
   taskInput.placeholder = text.addPlaceholder;
   document.querySelector(".add-label").textContent = text.addButton;
   clearDone.textContent = text.clearDone;
@@ -1057,8 +1091,23 @@ tabs.forEach((tab) => {
 });
 
 settingsButton.addEventListener("click", () => {
+  activeModule = "planner";
   openPlan("settings");
   settingsButton.blur();
+});
+
+moduleCards.forEach((card) => {
+  card.addEventListener("click", () => {
+    openModule(card.dataset.module);
+    card.blur();
+  });
+});
+
+moduleBacks.forEach((button) => {
+  button.addEventListener("click", () => {
+    openHome();
+    button.blur();
+  });
 });
 
 planCards.forEach((card) => {

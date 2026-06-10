@@ -31,6 +31,32 @@
           </button>
         </header>
 
+        <section class="module-home" id="homePanel" aria-label="Разделы">
+          <button class="module-card" type="button" data-module="planner">
+            <span class="module-icon" aria-hidden="true">□</span>
+            <strong>Планировщик</strong>
+            <small>День, неделя, месяц и год</small>
+          </button>
+          <button class="module-card" type="button" data-module="habits">
+            <span class="module-icon" aria-hidden="true">▦</span>
+            <strong>Привычки</strong>
+            <small>Ежедневные квадраты</small>
+          </button>
+          <button class="module-card" type="button" data-module="finance">
+            <span class="module-icon" aria-hidden="true">₽</span>
+            <strong>Финансы</strong>
+            <small>Расходы и цели</small>
+          </button>
+          <button class="module-card" type="button" data-module="goals">
+            <span class="module-icon" aria-hidden="true">◎</span>
+            <strong>Цели</strong>
+            <small>Большие фокусы</small>
+          </button>
+        </section>
+
+        <section class="module-shell" id="plannerModule" hidden>
+          <button class="module-back" type="button" data-module-back>← На главную</button>
+
         <nav class="tabs" aria-label="Периоды планирования">
           <button class="tab is-active" type="button" data-plan="work">
             <span class="tab-icon" aria-hidden="true">●</span>
@@ -181,6 +207,36 @@
               </button>
             </section>
           </div>
+        </section>
+
+        </section>
+
+        <section class="module-shell simple-module" id="financeModule" hidden>
+          <button class="module-back" type="button" data-module-back>← На главную</button>
+          <section class="list-panel">
+            <div class="list-head">
+              <h2>Финансы</h2>
+              <p>Скоро здесь будут расходы, доходы и финансовые цели.</p>
+            </div>
+            <div class="module-placeholder">
+              <strong>Первый полезный шаг</strong>
+              <p>Сделаем быстрый ввод: сумма, категория, комментарий. Потом добавим бюджет месяца.</p>
+            </div>
+          </section>
+        </section>
+
+        <section class="module-shell simple-module" id="goalsModule" hidden>
+          <button class="module-back" type="button" data-module-back>← На главную</button>
+          <section class="list-panel">
+            <div class="list-head">
+              <h2>Цели</h2>
+              <p>Большие направления отдельно от ежедневных задач.</p>
+            </div>
+            <div class="module-placeholder">
+              <strong>Структура цели</strong>
+              <p>Цель, срок, следующий шаг и прогресс. Так планы не будут теряться среди задач.</p>
+            </div>
+          </section>
         </section>
       </section>
     </main>
