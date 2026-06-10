@@ -189,6 +189,8 @@ const HABIT_COPY = {
     doneToday: "Отмечено сегодня",
     markToday: "Отметить сегодня",
     unmarkToday: "Убрать отметку",
+    back: "Назад",
+    title: "Привычки",
     month: "Месяц",
     year: "Год",
     empty: "Добавь первую привычку, например: 2 литра воды.",
@@ -203,6 +205,8 @@ const HABIT_COPY = {
     doneToday: "Done today",
     markToday: "Mark today",
     unmarkToday: "Unmark",
+    back: "Back",
+    title: "Habits",
     month: "Month",
     year: "Year",
     empty: "Add your first habit, for example: 2 liters of water.",
@@ -241,6 +245,7 @@ let activePlan = "today";
 let activeWorkPlan = "today";
 let state = createEmptyState();
 let db = null;
+let selectedHabitId = null;
 let activeTheme = loadPreference(THEME_KEY, THEMES, "scheme1", THEME_ALIASES);
 let activeLang = loadPreference(LANG_KEY, LANGS, "ru");
 
@@ -538,7 +543,7 @@ function tasksFor(plan) {
 
 function tasksForActiveView() {
   if (activePlan === "completed") return state.tasks.filter((task) => task.done);
-  if (activePlan === "settings" || activePlan === "habits") return [];
+  if (activePlan === "settings") return [];
   return tasksFor(activePlan).filter((task) => !task.done);
 }
 
@@ -554,7 +559,6 @@ function openPlan(plan) {
 
 function topModeFor(plan) {
   if (plan === "completed") return "completed";
-  if (plan === "habits") return "habits";
   return "work";
 }
 
@@ -568,11 +572,10 @@ function render() {
   planTitle.textContent = current.title;
   planHint.textContent = current.hint;
   emptyHint.textContent = current.empty;
-  taskForm.hidden = activePlan === "completed" || activePlan === "settings" || activePlan === "habits";
-  taskList.hidden = activePlan === "settings" || activePlan === "habits";
-  emptyState.hidden = activePlan === "settings" || activePlan === "habits";
+  taskForm.hidden = activePlan === "completed" || activePlan === "settings";
+  taskList.hidden = activePlan === "settings";
+  emptyState.hidden = activePlan === "settings";
   settingsPanel.hidden = activePlan !== "settings";
-  habitsPanel.hidden = activePlan !== "habits";
   renderStaticText();
 
   tabs.forEach((tab) => {
@@ -586,7 +589,7 @@ function render() {
     card.querySelector("span").textContent = tasksFor(plan).filter((task) => !task.done).length;
   });
 
-  if (activePlan !== "settings" && activePlan !== "habits") {
+  if (activePlan !== "settings") {
     taskList.innerHTML = "";
     visibleTasks.forEach((task) => taskList.append(createTaskElement(task)));
     emptyState.classList.toggle("is-visible", visibleTasks.length === 0);
@@ -635,8 +638,6 @@ function renderSettingsState() {
 }
 
 function renderHabits() {
-  if (activePlan !== "habits") return;
-
   const text = habitText();
   const now = new Date();
   const year = now.getFullYear();
@@ -653,19 +654,74 @@ function renderHabits() {
     return;
   }
 
+  const selectedHabit = state.habits.find((habit) => habit.id === selectedHabitId);
+  if (selectedHabit) {
+    habitList.append(createHabitDetailElement(selectedHabit, year, month, today));
+    return;
+  }
+
+  const title = document.createElement("div");
+  title.className = "habit-section-title";
+  title.textContent = text.title;
+  habitList.append(title);
+
   state.habits
     .slice()
     .sort((a, b) => a.createdAt - b.createdAt)
     .forEach((habit) => {
-      habitList.append(createHabitElement(habit, year, month, today));
+      habitList.append(createHabitListItem(habit, today));
     });
 }
 
-function createHabitElement(habit, year, month, today) {
+function createHabitListItem(habit, today) {
+  const text = habitText();
+  const item = document.createElement("article");
+  item.className = "habit-row";
+  item.style.setProperty("--habit-color", habit.color);
+
+  const check = document.createElement("button");
+  check.className = "habit-check";
+  check.type = "button";
+  check.classList.toggle("is-checked", isHabitChecked(habit.id, today));
+  check.setAttribute("aria-label", isHabitChecked(habit.id, today) ? text.unmarkToday : text.markToday);
+  check.addEventListener("click", async () => {
+    await toggleHabitCheck(habit.id, today, { openDetail: true });
+  });
+
+  const title = document.createElement("button");
+  title.className = "habit-row-title";
+  title.type = "button";
+  title.textContent = habit.title;
+  title.addEventListener("click", () => {
+    selectedHabitId = habit.id;
+    render();
+  });
+
+  const deleteButton = document.createElement("button");
+  deleteButton.className = "habit-delete";
+  deleteButton.type = "button";
+  deleteButton.title = text.delete;
+  deleteButton.textContent = "x";
+  deleteButton.addEventListener("click", () => deleteHabit(habit.id));
+
+  item.append(check, title, deleteButton);
+  return item;
+}
+
+function createHabitDetailElement(habit, year, month, today) {
   const text = habitText();
   const card = document.createElement("article");
   card.className = "habit-card";
   card.style.setProperty("--habit-color", habit.color);
+
+  const backButton = document.createElement("button");
+  backButton.className = "habit-back";
+  backButton.type = "button";
+  backButton.textContent = `← ${text.back}`;
+  backButton.addEventListener("click", () => {
+    selectedHabitId = null;
+    render();
+  });
 
   const head = document.createElement("div");
   head.className = "habit-head";
@@ -733,7 +789,7 @@ function createHabitElement(habit, year, month, today) {
   }
 
   yearBlock.append(yearTitle, yearGrid);
-  card.append(head, monthBlock, yearBlock);
+  card.append(backButton, head, monthBlock, yearBlock);
   return card;
 }
 
@@ -906,6 +962,7 @@ async function addHabit(title, color) {
 async function deleteHabit(id) {
   state.habits = state.habits.filter((habit) => habit.id !== id);
   state.habitChecks = state.habitChecks.filter((check) => check.habitId !== id);
+  if (selectedHabitId === id) selectedHabitId = null;
 
   if (db) {
     const { error } = await db.from("habits").delete().eq("id", id);
@@ -917,7 +974,7 @@ async function deleteHabit(id) {
   render();
 }
 
-async function toggleHabitCheck(habitId, date) {
+async function toggleHabitCheck(habitId, date, options = {}) {
   const exists = isHabitChecked(habitId, date);
 
   if (exists) {
@@ -938,6 +995,7 @@ async function toggleHabitCheck(habitId, date) {
     saveState();
   }
 
+  if (options.openDetail) selectedHabitId = habitId;
   render();
 }
 
