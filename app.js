@@ -8,13 +8,11 @@ const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
 const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
 const THEMES = [
   "palette1",
-  "palette2",
-  "palette3",
   "palette4",
   "palette5",
   "palette6",
   "palette7",
-  "palette8",
+  "palette9",
 ];
 const LANGS = ["ru", "en"];
 
@@ -34,13 +32,11 @@ const COPY = {
     cleanupTitle: "Очистка",
     themes: {
       palette1: "Схема 1",
-      palette2: "Схема 2",
-      palette3: "Схема 3",
       palette4: "Схема 4",
       palette5: "Схема 5",
       palette6: "Схема 6",
       palette7: "Схема 7",
-      palette8: "Схема 8",
+      palette9: "Новая",
     },
     views: {
       work: {
@@ -98,13 +94,11 @@ const COPY = {
     cleanupTitle: "Cleanup",
     themes: {
       palette1: "Scheme 1",
-      palette2: "Scheme 2",
-      palette3: "Scheme 3",
       palette4: "Scheme 4",
       palette5: "Scheme 5",
       palette6: "Scheme 6",
       palette7: "Scheme 7",
-      palette8: "Scheme 8",
+      palette9: "New",
     },
     views: {
       work: {
@@ -389,6 +383,12 @@ function openPlan(plan) {
   render();
 }
 
+function topModeFor(plan) {
+  if (plan === "completed") return "completed";
+  if (plan === "settings") return "settings";
+  return "work";
+}
+
 function render() {
   const current = copy().views[activePlan];
   const visibleTasks = tasksForActiveView().sort((a, b) => {
@@ -407,9 +407,7 @@ function render() {
 
   tabs.forEach((tab) => {
     const tabPlan = tab.dataset.plan;
-    const isActive =
-      tabPlan === activePlan || (tabPlan === "work" && PLANS[activePlan]);
-    tab.classList.toggle("is-active", isActive);
+    tab.classList.toggle("is-active", tabPlan === topModeFor(activePlan));
   });
   planCards.forEach((card) => {
     const plan = card.dataset.planCard;
@@ -601,11 +599,17 @@ taskForm.addEventListener("submit", async (event) => {
 });
 
 tabs.forEach((tab) => {
-  tab.addEventListener("click", () => openPlan(tab.dataset.plan));
+  tab.addEventListener("click", () => {
+    openPlan(tab.dataset.plan);
+    tab.blur();
+  });
 });
 
 planCards.forEach((card) => {
-  card.addEventListener("click", () => openPlan(card.dataset.planCard));
+  card.addEventListener("click", () => {
+    openPlan(card.dataset.planCard);
+    card.blur();
+  });
 });
 
 themeChoices.forEach((button) => {

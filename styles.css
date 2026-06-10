@@ -16,32 +16,6 @@
     sans-serif;
 }
 
-:root[data-theme="palette2"] {
-  --bg: #fbeec1;
-  --panel: #fff8df;
-  --ink: #5b5024;
-  --muted: #8d8741;
-  --line: #dfc299;
-  --soft: #daad86;
-  --accent: #659dbd;
-  --accent-ink: #4d7f9c;
-  --danger: #bc986a;
-  --focus: rgba(101, 157, 189, 0.24);
-}
-
-:root[data-theme="palette3"] {
-  --bg: #edf5e1;
-  --panel: #ffffff;
-  --ink: #05386b;
-  --muted: #379683;
-  --line: #cdebc8;
-  --soft: #8ee4af;
-  --accent: #379683;
-  --accent-ink: #05386b;
-  --danger: #2f6f63;
-  --focus: rgba(55, 150, 131, 0.24);
-}
-
 :root[data-theme="palette4"] {
   color-scheme: dark;
   --bg: #0c0032;
@@ -100,17 +74,17 @@
   --focus: rgba(77, 109, 154, 0.24);
 }
 
-:root[data-theme="palette8"] {
-  --bg: #e8e268;
-  --panel: #f4efd7;
-  --ink: #474853;
-  --muted: #844d36;
-  --line: #aaa0a0;
-  --soft: #86b3d1;
-  --accent: #844d36;
-  --accent-ink: #5f3828;
-  --danger: #844d36;
-  --focus: rgba(132, 77, 54, 0.24);
+:root[data-theme="palette9"] {
+  --bg: #b1afa2;
+  --panel: #f0f1e8;
+  --ink: #2d3c1c;
+  --muted: #4c542c;
+  --line: #cfd8c2;
+  --soft: #bed4a4;
+  --accent: #82ad51;
+  --accent-ink: #2d3c1c;
+  --danger: #6f5f51;
+  --focus: rgba(130, 173, 81, 0.28);
 }
 
 * {
@@ -482,14 +456,6 @@ button:focus-visible {
   background: linear-gradient(135deg, #242582 0 20%, #553d67 20% 40%, #f64c72 40% 60%, #99738e 60% 80%, #2f2fa2 80%);
 }
 
-.theme-dot.palette2 {
-  background: linear-gradient(135deg, #8d8741 0 20%, #659dbd 20% 40%, #daad86 40% 60%, #bc986a 60% 80%, #fbeec1 80%);
-}
-
-.theme-dot.palette3 {
-  background: linear-gradient(135deg, #05386b 0 20%, #379683 20% 40%, #5cdb95 40% 60%, #8ee4af 60% 80%, #edf5e1 80%);
-}
-
 .theme-dot.palette4 {
   background: linear-gradient(135deg, #0c0032 0 20%, #190061 20% 40%, #240090 40% 60%, #3500d3 60% 80%, #282828 80%);
 }
@@ -506,8 +472,8 @@ button:focus-visible {
   background: linear-gradient(135deg, #5f6366 0 20%, #4d6d9a 20% 40%, #86b3d1 40% 60%, #99ced3 60% 80%, #edb5bf 80%);
 }
 
-.theme-dot.palette8 {
-  background: linear-gradient(135deg, #844d36 0 20%, #474853 20% 40%, #86b3d1 40% 60%, #aaa0a0 60% 80%, #8e8268 80%);
+.theme-dot.palette9 {
+  background: linear-gradient(135deg, #82ad51 0 16%, #bed4a4 16% 32%, #2d3c1c 32% 48%, #848274 48% 64%, #b1afa2 64% 80%, #4c542c 80%);
 }
 
 .segmented {
