@@ -11,12 +11,10 @@
   --danger: #f64c72;
   --shadow: 0 18px 48px rgba(28, 33, 29, 0.08);
   --focus: rgba(246, 76, 114, 0.22);
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: "Poppins", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-:root[data-theme="palette4"] {
+:root[data-theme="scheme2"] {
   color-scheme: dark;
   --bg: #0c0032;
   --panel: #190061;
@@ -31,7 +29,7 @@
   --focus: rgba(53, 0, 211, 0.36);
 }
 
-:root[data-theme="palette5"] {
+:root[data-theme="scheme3"] {
   color-scheme: dark;
   --bg: #1a1a1d;
   --panel: #282828;
@@ -46,7 +44,7 @@
   --focus: rgba(195, 7, 63, 0.34);
 }
 
-:root[data-theme="palette6"] {
+:root[data-theme="scheme4"] {
   color-scheme: dark;
   --bg: #1c3334;
   --panel: #2f4454;
@@ -61,7 +59,7 @@
   --focus: rgba(218, 123, 147, 0.3);
 }
 
-:root[data-theme="palette7"] {
+:root[data-theme="scheme5"] {
   --bg: #edb5bf;
   --panel: #fff5f7;
   --ink: #4d6d9a;
@@ -74,7 +72,7 @@
   --focus: rgba(77, 109, 154, 0.24);
 }
 
-:root[data-theme="palette9"] {
+:root[data-theme="scheme6"] {
   --bg: #b1afa2;
   --panel: #f0f1e8;
   --ink: #2d3c1c;
@@ -452,27 +450,27 @@ button:focus-visible {
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
-.theme-dot.palette1 {
+.theme-dot.scheme1 {
   background: linear-gradient(135deg, #242582 0 20%, #553d67 20% 40%, #f64c72 40% 60%, #99738e 60% 80%, #2f2fa2 80%);
 }
 
-.theme-dot.palette4 {
+.theme-dot.scheme2 {
   background: linear-gradient(135deg, #0c0032 0 20%, #190061 20% 40%, #240090 40% 60%, #3500d3 60% 80%, #282828 80%);
 }
 
-.theme-dot.palette5 {
+.theme-dot.scheme3 {
   background: linear-gradient(135deg, #1a1a1d 0 20%, #4e4e50 20% 40%, #6f2232 40% 60%, #950740 60% 80%, #c3073f 80%);
 }
 
-.theme-dot.palette6 {
+.theme-dot.scheme4 {
   background: linear-gradient(135deg, #2f4454 0 20%, #2e151b 20% 40%, #da7b93 40% 60%, #376e6f 60% 80%, #1c3334 80%);
 }
 
-.theme-dot.palette7 {
+.theme-dot.scheme5 {
   background: linear-gradient(135deg, #5f6366 0 20%, #4d6d9a 20% 40%, #86b3d1 40% 60%, #99ced3 60% 80%, #edb5bf 80%);
 }
 
-.theme-dot.palette9 {
+.theme-dot.scheme6 {
   background: linear-gradient(135deg, #82ad51 0 16%, #bed4a4 16% 32%, #2d3c1c 32% 48%, #848274 48% 64%, #b1afa2 64% 80%, #4c542c 80%);
 }
 

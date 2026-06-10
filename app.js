@@ -6,14 +6,15 @@ const LANG_KEY = "simple-plans-lang";
 
 const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
 const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
-const THEMES = [
-  "palette1",
-  "palette4",
-  "palette5",
-  "palette6",
-  "palette7",
-  "palette9",
-];
+const THEMES = ["scheme1", "scheme2", "scheme3", "scheme4", "scheme5", "scheme6"];
+const THEME_ALIASES = {
+  palette1: "scheme1",
+  palette4: "scheme2",
+  palette5: "scheme3",
+  palette6: "scheme4",
+  palette7: "scheme5",
+  palette9: "scheme6",
+};
 const LANGS = ["ru", "en"];
 
 const COPY = {
@@ -31,12 +32,12 @@ const COPY = {
     languageTitle: "Язык",
     cleanupTitle: "Очистка",
     themes: {
-      palette1: "Схема 1",
-      palette4: "Схема 4",
-      palette5: "Схема 5",
-      palette6: "Схема 6",
-      palette7: "Схема 7",
-      palette9: "Новая",
+      scheme1: "Схема 1",
+      scheme2: "Схема 2",
+      scheme3: "Схема 3",
+      scheme4: "Схема 4",
+      scheme5: "Схема 5",
+      scheme6: "Схема 6",
     },
     views: {
       work: {
@@ -93,12 +94,12 @@ const COPY = {
     languageTitle: "Language",
     cleanupTitle: "Cleanup",
     themes: {
-      palette1: "Scheme 1",
-      palette4: "Scheme 4",
-      palette5: "Scheme 5",
-      palette6: "Scheme 6",
-      palette7: "Scheme 7",
-      palette9: "New",
+      scheme1: "Scheme 1",
+      scheme2: "Scheme 2",
+      scheme3: "Scheme 3",
+      scheme4: "Scheme 4",
+      scheme5: "Scheme 5",
+      scheme6: "Scheme 6",
     },
     views: {
       work: {
@@ -165,7 +166,7 @@ let activePlan = "today";
 let activeWorkPlan = "today";
 let state = createEmptyState();
 let db = null;
-let activeTheme = loadPreference(THEME_KEY, THEMES, "palette1");
+let activeTheme = loadPreference(THEME_KEY, THEMES, "scheme1", THEME_ALIASES);
 let activeLang = loadPreference(LANG_KEY, LANGS, "ru");
 
 init();
@@ -182,8 +183,12 @@ function copy() {
   return COPY[activeLang];
 }
 
-function loadPreference(key, allowed, fallback) {
+function loadPreference(key, allowed, fallback, aliases = {}) {
   const saved = localStorage.getItem(key);
+  if (aliases[saved]) {
+    localStorage.setItem(key, aliases[saved]);
+    return aliases[saved];
+  }
   return allowed.includes(saved) ? saved : fallback;
 }
 
