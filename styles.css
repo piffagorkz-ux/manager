@@ -621,37 +621,35 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  min-height: 112px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--panel) 88%, var(--bg));
-  color: var(--ink);
-  padding: 18px;
-  box-shadow: var(--shadow);
+  color: color-mix(in srgb, var(--muted) 72%, var(--bg));
+  padding: 4px 6px 2px;
 }
 
 .daily-quote small {
   display: block;
-  margin-bottom: 6px;
-  color: var(--muted);
-  font-weight: 800;
+  margin-bottom: 2px;
+  color: color-mix(in srgb, var(--muted) 54%, var(--bg));
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .daily-quote p {
   margin: 0;
-  font-size: clamp(1rem, 2.4vw, 1.35rem);
-  font-weight: 850;
-  line-height: 1.35;
+  font-family: "Caveat", cursive;
+  font-size: clamp(1.35rem, 3.2vw, 2rem);
+  font-weight: 600;
+  line-height: 1.12;
 }
 
 .quote-button {
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--bg);
-  color: var(--muted);
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: color-mix(in srgb, var(--muted) 54%, var(--bg));
   font-weight: 900;
 }
 
@@ -1226,7 +1224,8 @@ select {
     align-items: flex-start;
     flex-direction: column;
     min-height: 0;
-    padding: 14px;
+    gap: 6px;
+    padding: 2px 4px;
   }
 
   .tabs {
