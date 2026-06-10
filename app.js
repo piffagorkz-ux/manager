@@ -270,7 +270,6 @@ const languageTitle = document.querySelector("#languageTitle");
 const cleanupTitle = document.querySelector("#cleanupTitle");
 const settingsButton = document.querySelector("#settingsButton");
 const homePanel = document.querySelector("#homePanel");
-const quoteLabel = document.querySelector("#quoteLabel");
 const quoteText = document.querySelector("#quoteText");
 const quoteNext = document.querySelector("#quoteNext");
 const plannerModule = document.querySelector("#plannerModule");
@@ -775,7 +774,6 @@ function renderDailyQuote() {
   const offset = Number(localStorage.getItem(QUOTE_OFFSET_KEY) || 0);
   const index = (daySeed + offset) % quotes.length;
 
-  quoteLabel.textContent = activeLang === "ru" ? "Цитата дня" : "Daily quote";
   quoteText.textContent = quotes[index];
 }
 
