@@ -234,6 +234,7 @@
                   <input id="monthlyIncomeTitle" type="text" placeholder="Название" autocomplete="off" required />
                   <input id="monthlyIncomeAmount" type="number" inputmode="decimal" placeholder="Сумма" required />
                   <button class="quiet-button" type="submit">Добавить</button>
+                  <div id="monthlyIncomeList" class="simple-list compact-list"></div>
                 </form>
                 <form class="mini-form finance-entry-form" id="monthlyExpenseForm" hidden>
                   <strong>Постоянный расход</strong>
@@ -247,6 +248,7 @@
                     <option value="Иное">Иное</option>
                   </select>
                   <button class="quiet-button" type="submit">Добавить</button>
+                  <div id="monthlyExpenseList" class="simple-list compact-list"></div>
                 </form>
                 <form class="mini-form finance-entry-form" id="quickIncomeForm" hidden>
                   <strong>Дополнительный плюс</strong>
@@ -269,10 +271,6 @@
                 </form>
               </div>
               <div class="finance-lists">
-                <section>
-                  <h3>Постоянные</h3>
-                  <div id="monthlyMoneyList" class="simple-list"></div>
-                </section>
                 <section>
                   <h3>Дополнительные</h3>
                   <div id="extraMoneyList" class="simple-list"></div>

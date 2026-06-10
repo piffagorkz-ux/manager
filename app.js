@@ -279,7 +279,8 @@ const goalsModule = document.querySelector("#goalsModule");
 const moduleCards = document.querySelectorAll(".module-card");
 const moduleBacks = document.querySelectorAll("[data-module-back]");
 const financeSummary = document.querySelector("#financeSummary");
-const monthlyMoneyList = document.querySelector("#monthlyMoneyList");
+const monthlyIncomeList = document.querySelector("#monthlyIncomeList");
+const monthlyExpenseList = document.querySelector("#monthlyExpenseList");
 const extraMoneyList = document.querySelector("#extraMoneyList");
 const monthlyIncomeForm = document.querySelector("#monthlyIncomeForm");
 const monthlyExpenseForm = document.querySelector("#monthlyExpenseForm");
@@ -787,7 +788,8 @@ function renderFinance() {
   const balance = monthlyIncome + extraIncome - monthlyExpense - extraExpense;
 
   financeSummary.textContent = `Баланс месяца: ${formatMoney(balance)} · доходы ${formatMoney(monthlyIncome + extraIncome)} · расходы ${formatMoney(monthlyExpense + extraExpense)}`;
-  renderMoneyList(monthlyMoneyList, finance.monthly, "monthly");
+  renderMoneyList(monthlyIncomeList, finance.monthly.filter((item) => item.type === "income"), "monthly");
+  renderMoneyList(monthlyExpenseList, finance.monthly.filter((item) => item.type === "expense"), "monthly");
   renderMoneyList(extraMoneyList, finance.extra, "extra");
 }
 
