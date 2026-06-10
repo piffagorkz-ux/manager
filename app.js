@@ -6,7 +6,20 @@ const LANG_KEY = "simple-plans-lang";
 
 const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
 const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
-const THEMES = ["scheme1", "scheme2", "scheme3", "scheme4", "scheme5", "scheme6"];
+const THEMES = [
+  "scheme1",
+  "scheme2",
+  "scheme3",
+  "scheme4",
+  "scheme5",
+  "scheme6",
+  "dark1",
+  "dark2",
+  "dark3",
+  "dark4",
+  "dark5",
+  "dark6",
+];
 const THEME_ALIASES = {
   palette1: "scheme1",
   palette4: "scheme2",
@@ -38,6 +51,12 @@ const COPY = {
       scheme4: "Схема 4",
       scheme5: "Схема 5",
       scheme6: "Схема 6",
+      dark1: "Темная 1",
+      dark2: "Темная 2",
+      dark3: "Темная 3",
+      dark4: "Темная 4",
+      dark5: "Темная 5",
+      dark6: "Темная 6",
     },
     views: {
       work: {
@@ -100,6 +119,12 @@ const COPY = {
       scheme4: "Scheme 4",
       scheme5: "Scheme 5",
       scheme6: "Scheme 6",
+      dark1: "Dark 1",
+      dark2: "Dark 2",
+      dark3: "Dark 3",
+      dark4: "Dark 4",
+      dark5: "Dark 5",
+      dark6: "Dark 6",
     },
     views: {
       work: {
