@@ -615,6 +615,46 @@ select {
   line-height: 1.35;
 }
 
+.daily-quote {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 112px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel) 88%, var(--bg));
+  color: var(--ink);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.daily-quote small {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.daily-quote p {
+  margin: 0;
+  font-size: clamp(1rem, 2.4vw, 1.35rem);
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.quote-button {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--muted);
+  font-weight: 900;
+}
+
 .module-shell {
   display: block;
 }
@@ -1176,6 +1216,13 @@ select {
 
   .module-card strong {
     font-size: 0.98rem;
+  }
+
+  .daily-quote {
+    align-items: flex-start;
+    flex-direction: column;
+    min-height: 0;
+    padding: 14px;
   }
 
   .tabs {

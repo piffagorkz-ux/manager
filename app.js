@@ -4,6 +4,7 @@ const OLD_STORAGE_KEY = "codex-todo-tracker-v1";
 const LAST_OPENED_KEY = "simple-plans-last-opened";
 const THEME_KEY = "simple-plans-theme";
 const LANG_KEY = "simple-plans-lang";
+const QUOTE_OFFSET_KEY = "manager-quote-offset";
 
 const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
 const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
@@ -216,6 +217,33 @@ const HABIT_COPY = {
   },
 };
 
+const DAILY_QUOTES = {
+  ru: [
+    "Маленькое действие сегодня сильнее большого обещания на потом.",
+    "Фокус — это когда важное получает место раньше срочного.",
+    "Хороший день начинается не идеально, а осознанно.",
+    "Прогресс любит повторение больше, чем настроение.",
+    "Не надо делать всё. Надо сделать следующее правильное.",
+    "Система побеждает силу воли, когда день становится шумным.",
+    "Один честный шаг каждый день меняет траекторию года.",
+    "Спокойный план освобождает голову для жизни.",
+    "То, что отмечено, начинает расти.",
+    "Будущее строится тихими решениями, которые ты повторяешь.",
+  ],
+  en: [
+    "A small action today beats a big promise for later.",
+    "Focus means giving what matters a place before what is urgent.",
+    "A good day starts consciously, not perfectly.",
+    "Progress likes repetition more than mood.",
+    "You do not need to do everything. Do the next right thing.",
+    "A system beats willpower when the day gets noisy.",
+    "One honest step each day changes the path of the year.",
+    "A calm plan gives your mind room to live.",
+    "What gets marked starts to grow.",
+    "The future is built by quiet decisions you repeat.",
+  ],
+};
+
 const taskForm = document.querySelector("#taskForm");
 const taskInput = document.querySelector("#taskInput");
 const taskList = document.querySelector("#taskList");
@@ -242,6 +270,9 @@ const languageTitle = document.querySelector("#languageTitle");
 const cleanupTitle = document.querySelector("#cleanupTitle");
 const settingsButton = document.querySelector("#settingsButton");
 const homePanel = document.querySelector("#homePanel");
+const quoteLabel = document.querySelector("#quoteLabel");
+const quoteText = document.querySelector("#quoteText");
+const quoteNext = document.querySelector("#quoteNext");
 const plannerModule = document.querySelector("#plannerModule");
 const financeModule = document.querySelector("#financeModule");
 const goalsModule = document.querySelector("#goalsModule");
@@ -733,7 +764,18 @@ function render() {
   renderHabits();
   renderFinance();
   renderGoals();
+  renderDailyQuote();
   renderSettingsState();
+}
+
+function renderDailyQuote() {
+  const quotes = DAILY_QUOTES[activeLang] || DAILY_QUOTES.ru;
+  const daySeed = Number(todayISO().replaceAll("-", ""));
+  const offset = Number(localStorage.getItem(QUOTE_OFFSET_KEY) || 0);
+  const index = (daySeed + offset) % quotes.length;
+
+  quoteLabel.textContent = activeLang === "ru" ? "Цитата дня" : "Daily quote";
+  quoteText.textContent = quotes[index];
 }
 
 function renderFinance() {
@@ -1395,6 +1437,13 @@ moduleBacks.forEach((button) => {
     openHome();
     button.blur();
   });
+});
+
+quoteNext.addEventListener("click", () => {
+  const nextOffset = Number(localStorage.getItem(QUOTE_OFFSET_KEY) || 0) + 1;
+  localStorage.setItem(QUOTE_OFFSET_KEY, String(nextOffset));
+  renderDailyQuote();
+  quoteNext.blur();
 });
 
 planCards.forEach((card) => {
