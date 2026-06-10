@@ -653,6 +653,7 @@ function renderHabits() {
   const today = todayISO();
 
   habitList.innerHTML = "";
+  habitForm.hidden = Boolean(selectedHabitId);
 
   if (!state.habits.length) {
     const empty = document.createElement("div");
