@@ -186,6 +186,7 @@ const langChoices = document.querySelectorAll(".lang-choice");
 const themeTitle = document.querySelector("#themeTitle");
 const languageTitle = document.querySelector("#languageTitle");
 const cleanupTitle = document.querySelector("#cleanupTitle");
+const settingsButton = document.querySelector("#settingsButton");
 
 let activePlan = "today";
 let activeWorkPlan = "today";
@@ -415,7 +416,6 @@ function openPlan(plan) {
 
 function topModeFor(plan) {
   if (plan === "completed") return "completed";
-  if (plan === "settings") return "settings";
   return "work";
 }
 
@@ -439,6 +439,7 @@ function render() {
     const tabPlan = tab.dataset.plan;
     tab.classList.toggle("is-active", tabPlan === topModeFor(activePlan));
   });
+  settingsButton.classList.toggle("is-active", activePlan === "settings");
   planCards.forEach((card) => {
     const plan = card.dataset.planCard;
     card.classList.toggle("is-current", plan === activePlan);
@@ -460,6 +461,8 @@ function renderStaticText() {
   taskInput.placeholder = text.addPlaceholder;
   document.querySelector(".add-label").textContent = text.addButton;
   clearDone.textContent = text.clearDone;
+  settingsButton.setAttribute("aria-label", text.settings);
+  settingsButton.title = text.settings;
   themeTitle.textContent = text.themeTitle;
   languageTitle.textContent = text.languageTitle;
   cleanupTitle.textContent = text.cleanupTitle;
@@ -633,6 +636,11 @@ tabs.forEach((tab) => {
     openPlan(tab.dataset.plan);
     tab.blur();
   });
+});
+
+settingsButton.addEventListener("click", () => {
+  openPlan("settings");
+  settingsButton.blur();
 });
 
 planCards.forEach((card) => {

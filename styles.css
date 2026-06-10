@@ -244,6 +244,7 @@ h1 {
 
 .quiet-button,
 .tab,
+.settings-button,
 .add-button,
 .plan-card,
 .task-action {
@@ -263,8 +264,27 @@ h1 {
   padding: 10px 12px;
 }
 
+.settings-button {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.settings-button.is-active {
+  border-color: var(--accent);
+  background: var(--soft);
+  color: var(--accent-ink);
+}
+
 .quiet-button:hover,
 .tab:hover,
+.settings-button:hover,
 .plan-card:hover,
 .task-action:hover {
   transform: translateY(-1px);
@@ -272,7 +292,7 @@ h1 {
 
 .tabs {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   overflow: visible;
   padding-bottom: 0;
@@ -649,7 +669,7 @@ button:focus-visible {
   }
 
   .header {
-    flex-direction: column;
+    flex-direction: row;
     gap: 12px;
     margin-bottom: 18px;
   }
@@ -658,14 +678,14 @@ button:focus-visible {
     font-size: clamp(2.3rem, 12.75vw, 3.4rem);
   }
 
-  .quiet-button {
-    width: 100%;
-    min-height: 44px;
+  .settings-button {
+    width: 44px;
+    height: 44px;
   }
 
   .tabs {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 9px;
     overflow: visible;
     margin: 0 0 14px;
@@ -815,9 +835,9 @@ button:focus-visible {
   }
 
   .tab {
-    flex-direction: column;
-    gap: 4px;
-    min-height: 58px;
+    flex-direction: row;
+    gap: 5px;
+    min-height: 52px;
   }
 
   .plan-card span {
