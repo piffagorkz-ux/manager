@@ -895,6 +895,90 @@ select {
   font-size: 0.88rem;
 }
 
+.wish-cloud {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 10;
+  width: 58px;
+  height: 58px;
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 86%, var(--bg));
+  color: color-mix(in srgb, var(--accent) 72%, var(--muted));
+  box-shadow: var(--shadow);
+  font-size: 1.55rem;
+}
+
+.wishes-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.wish-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.wish-form[hidden] {
+  display: none;
+}
+
+.wish-list {
+  display: grid;
+  gap: 8px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.wish-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  padding: 10px;
+}
+
+.wish-row input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+}
+
+.wish-content {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.wish-content strong {
+  overflow-wrap: anywhere;
+}
+
+.wish-content small {
+  color: var(--muted);
+}
+
+.wish-row.is-done .wish-content strong {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.wish-row button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+}
+
 .module-shell.is-habits-module .tabs,
 .module-shell.is-habits-module .add-form,
 .module-shell.is-habits-module .overview {
@@ -1351,6 +1435,15 @@ select {
 
   .finance-donut {
     justify-self: center;
+  }
+
+  .wish-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wish-cloud {
+    width: 54px;
+    height: 54px;
   }
 
   .finance-icon-actions {

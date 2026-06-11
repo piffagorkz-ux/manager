@@ -275,8 +275,15 @@ const quoteNext = document.querySelector("#quoteNext");
 const plannerModule = document.querySelector("#plannerModule");
 const financeModule = document.querySelector("#financeModule");
 const goalsModule = document.querySelector("#goalsModule");
+const wishesModule = document.querySelector("#wishesModule");
 const moduleCards = document.querySelectorAll(".module-card");
 const moduleBacks = document.querySelectorAll("[data-module-back]");
+const wishCloud = document.querySelector("#wishCloud");
+const wishesSummary = document.querySelector("#wishesSummary");
+const wishForm = document.querySelector("#wishForm");
+const wishInput = document.querySelector("#wishInput");
+const wishList = document.querySelector("#wishList");
+const wishTabs = document.querySelectorAll(".wish-tab");
 const financeSummary = document.querySelector("#financeSummary");
 const monthlyIncomeList = document.querySelector("#monthlyIncomeList");
 const monthlyExpenseList = document.querySelector("#monthlyExpenseList");
@@ -305,6 +312,7 @@ let activeWorkPlan = "today";
 let state = createEmptyState();
 let db = null;
 let selectedHabitId = null;
+let activeWishView = "active";
 let activeTheme = loadPreference(THEME_KEY, THEMES, "scheme1", THEME_ALIASES);
 let activeLang = loadPreference(LANG_KEY, LANGS, "ru");
 
@@ -353,6 +361,7 @@ function createEmptyState() {
     habitChecks: [],
     finance: createEmptyFinance(),
     goals: [],
+    wishes: [],
   };
 }
 
@@ -438,18 +447,19 @@ async function loadRemoteState() {
     })),
     finance: moduleState.finance,
     goals: moduleState.goals,
+    wishes: moduleState.wishes,
   };
 }
 
 function loadModuleState() {
   const saved = localStorage.getItem(MODULE_STORAGE_KEY);
-  if (!saved) return { finance: createEmptyFinance(), goals: [] };
+  if (!saved) return { finance: createEmptyFinance(), goals: [], wishes: [] };
 
   try {
     const value = JSON.parse(saved);
     return normalizeModuleState(value);
   } catch {
-    return { finance: createEmptyFinance(), goals: [] };
+    return { finance: createEmptyFinance(), goals: [], wishes: [] };
   }
 }
 
@@ -458,6 +468,7 @@ function normalizeModuleState(value) {
   const monthly = Array.isArray(finance.monthly) ? finance.monthly : [];
   const extra = Array.isArray(finance.extra) ? finance.extra : [];
   const goals = Array.isArray(value.goals) ? value.goals : [];
+  const wishes = Array.isArray(value.wishes) ? value.wishes : [];
 
   return {
     finance: {
@@ -471,6 +482,15 @@ function normalizeModuleState(value) {
         title: String(goal.title).trim(),
         horizon: ["month", "year", "three", "five"].includes(goal.horizon) ? goal.horizon : "month",
         createdAt: goal.createdAt || Date.now(),
+      })),
+    wishes: wishes
+      .filter((wish) => wish && wish.title)
+      .map((wish) => ({
+        id: wish.id || crypto.randomUUID(),
+        title: String(wish.title).trim(),
+        done: Boolean(wish.done),
+        createdAt: wish.createdAt || Date.now(),
+        completedAt: wish.completedAt || null,
       })),
   };
 }
@@ -502,6 +522,7 @@ function createInitialState() {
     habitChecks: [],
     finance: createEmptyFinance(),
     goals: [],
+    wishes: [],
   };
 }
 
@@ -539,6 +560,7 @@ function normalizeState(value) {
       })),
     finance: moduleState.finance,
     goals: moduleState.goals,
+    wishes: moduleState.wishes,
   };
 }
 
@@ -560,6 +582,7 @@ function migrateOldTasks(oldTasks) {
     habitChecks: [],
     finance: createEmptyFinance(),
     goals: [],
+    wishes: [],
   };
 }
 
@@ -609,6 +632,7 @@ function saveModuleState() {
     JSON.stringify({
       finance: state.finance || createEmptyFinance(),
       goals: state.goals || [],
+      wishes: state.wishes || [],
     }),
   );
 }
@@ -734,6 +758,7 @@ function render() {
   plannerModule.classList.toggle("is-habits-module", activeModule === "habits");
   financeModule.hidden = activeModule !== "finance";
   goalsModule.hidden = activeModule !== "goals";
+  wishesModule.hidden = activeModule !== "wishes";
 
   dateLine.textContent = readableDate();
   planTitle.textContent = current.title;
@@ -768,6 +793,7 @@ function render() {
   renderHabits();
   renderFinance();
   renderGoals();
+  renderWishes();
   renderDailyQuote();
   renderSettingsState();
 }
@@ -867,6 +893,108 @@ function renderGoals() {
         container.append(row);
       });
   });
+}
+
+function renderWishes() {
+  const wishes = state.wishes || [];
+  const active = wishes.filter((wish) => !wish.done);
+  const done = wishes.filter((wish) => wish.done);
+  const free = Math.max(0, 100 - active.length);
+
+  wishesSummary.textContent =
+    activeWishView === "active"
+      ? `${active.length}/100 заполнено · свободно ${free}`
+      : `Выполнено желаний: ${done.length}`;
+  wishForm.hidden = activeWishView !== "active" || active.length >= 100;
+  wishTabs.forEach((tab) => {
+    tab.classList.toggle("is-selected", tab.dataset.wishView === activeWishView);
+  });
+
+  wishList.innerHTML = "";
+  const visible = activeWishView === "active" ? active : done;
+
+  if (!visible.length) {
+    const empty = document.createElement("p");
+    empty.className = "simple-empty";
+    empty.textContent = activeWishView === "active" ? "Пока есть свободные места для желаний." : "Выполненные желания появятся здесь.";
+    wishList.append(empty);
+    return;
+  }
+
+  visible
+    .slice()
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .forEach((wish) => {
+      wishList.append(createWishElement(wish));
+    });
+}
+
+function createWishElement(wish) {
+  const row = document.createElement("div");
+  row.className = `wish-row${wish.done ? " is-done" : ""}`;
+
+  const check = document.createElement("input");
+  check.type = "checkbox";
+  check.checked = wish.done;
+  check.disabled = wish.done;
+  check.addEventListener("change", () => completeWish(wish.id));
+
+  const content = document.createElement("div");
+  content.className = "wish-content";
+
+  const title = document.createElement("strong");
+  title.textContent = wish.title;
+  content.append(title);
+
+  const meta = document.createElement("small");
+  meta.textContent = wish.done
+    ? `Выполнено спустя ${formatDuration(wish.createdAt, wish.completedAt || Date.now())}`
+    : `Добавлено ${formatShortDate(wish.createdAt)}`;
+  content.append(meta);
+
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.textContent = "x";
+  remove.addEventListener("click", () => deleteWish(wish.id));
+
+  row.append(check, content, remove);
+  return row;
+}
+
+function formatShortDate(value) {
+  return new Intl.DateTimeFormat(activeLang === "ru" ? "ru-RU" : "en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function formatDuration(start, end) {
+  let startDate = new Date(start);
+  const endDate = new Date(end);
+  let months = 0;
+
+  while (true) {
+    const next = new Date(startDate);
+    next.setMonth(next.getMonth() + 1);
+    if (next > endDate) break;
+    startDate = next;
+    months += 1;
+  }
+
+  const days = Math.max(0, Math.floor((endDate - startDate) / 86400000));
+  const parts = [];
+  if (months) parts.push(`${months} ${pluralRu(months, "месяц", "месяца", "месяцев")}`);
+  if (days || !parts.length) parts.push(`${days} ${pluralRu(days, "день", "дня", "дней")}`);
+  return parts.join(" ");
+}
+
+function pluralRu(value, one, few, many) {
+  const last = value % 10;
+  const lastTwo = value % 100;
+  if (last === 1 && lastTwo !== 11) return one;
+  if (last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14)) return few;
+  return many;
 }
 
 function sumMoney(items, type) {
@@ -1325,6 +1453,36 @@ function deleteGoal(id) {
   render();
 }
 
+function addWish(title) {
+  const activeCount = (state.wishes || []).filter((wish) => !wish.done).length;
+  if (activeCount >= 100) return;
+
+  state.wishes.push({
+    id: crypto.randomUUID(),
+    title: title.trim(),
+    done: false,
+    createdAt: Date.now(),
+    completedAt: null,
+  });
+  saveModuleState();
+  render();
+}
+
+function completeWish(id) {
+  state.wishes = state.wishes.map((wish) =>
+    wish.id === id ? { ...wish, done: true, completedAt: Date.now() } : wish,
+  );
+  activeWishView = "done";
+  saveModuleState();
+  render();
+}
+
+function deleteWish(id) {
+  state.wishes = state.wishes.filter((wish) => wish.id !== id);
+  saveModuleState();
+  render();
+}
+
 taskForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const title = taskInput.value.trim();
@@ -1421,6 +1579,27 @@ goalForm.addEventListener("submit", (event) => {
   event.preventDefault();
   addGoal(document.querySelector("#goalTitle").value, document.querySelector("#goalHorizon").value);
   goalForm.reset();
+});
+
+wishForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  addWish(wishInput.value);
+  wishForm.reset();
+  wishInput.focus();
+});
+
+wishTabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    activeWishView = tab.dataset.wishView;
+    render();
+    tab.blur();
+  });
+});
+
+wishCloud.addEventListener("click", () => {
+  activeModule = "wishes";
+  render();
+  wishCloud.blur();
 });
 
 tabs.forEach((tab) => {

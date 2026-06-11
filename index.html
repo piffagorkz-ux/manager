@@ -331,6 +331,34 @@
             </div>
           </section>
         </section>
+
+        <section class="module-shell simple-module" id="wishesModule" hidden>
+          <button class="module-back" type="button" data-module-back>← На главную</button>
+          <section class="list-panel">
+            <div class="list-head">
+              <h2>Желания</h2>
+              <p id="wishesSummary">100 мест для того, что хочется исполнить.</p>
+            </div>
+            <div class="wishes-panel">
+              <div class="segmented">
+                <button class="wish-tab is-selected" type="button" data-wish-view="active">Активные</button>
+                <button class="wish-tab" type="button" data-wish-view="done">Выполненные</button>
+              </div>
+              <form class="wish-form" id="wishForm">
+                <input id="wishInput" type="text" placeholder="Новое желание" autocomplete="off" required />
+                <button class="add-button" type="submit">
+                  <span class="add-icon" aria-hidden="true">+</span>
+                  <span>Добавить</span>
+                </button>
+              </form>
+              <div class="wish-list" id="wishList"></div>
+            </div>
+          </section>
+        </section>
+
+        <button class="wish-cloud" id="wishCloud" type="button" aria-label="Желания">
+          ☁
+        </button>
       </section>
     </main>
 
