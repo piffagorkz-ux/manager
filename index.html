@@ -31,6 +31,20 @@
           </button>
         </header>
 
+        <section class="auth-panel" id="authPanel" hidden>
+          <form class="auth-form" id="authForm">
+            <h2>Вход</h2>
+            <p>Войди или зарегистрируйся, чтобы данные были только твоими.</p>
+            <input id="authEmail" type="email" placeholder="Email" autocomplete="email" required />
+            <input id="authPassword" type="password" placeholder="Пароль" autocomplete="current-password" required />
+            <div class="auth-actions">
+              <button class="add-button" type="submit" data-auth-action="login">Войти</button>
+              <button class="quiet-button" type="button" id="signupButton">Регистрация</button>
+            </div>
+            <small id="authMessage"></small>
+          </form>
+        </section>
+
         <section class="module-home" id="homePanel" aria-label="Разделы">
           <button class="module-card" type="button" data-module="planner">
             <span class="module-icon" aria-hidden="true">□</span>
@@ -207,6 +221,11 @@
               <button class="quiet-button danger-button" id="clearDone" type="button">
                 Убрать выполненные
               </button>
+            </section>
+
+            <section class="settings-group">
+              <h3>Аккаунт</h3>
+              <button class="quiet-button" id="logoutButton" type="button">Выйти</button>
             </section>
           </div>
         </section>

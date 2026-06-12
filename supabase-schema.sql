@@ -26,6 +26,21 @@ create table if not exists public.habit_checks (
 alter table public.tasks
 add column if not exists completed_at timestamptz;
 
+alter table public.tasks
+add column if not exists user_id uuid references auth.users(id) on delete cascade default auth.uid();
+
+alter table public.habits
+add column if not exists user_id uuid references auth.users(id) on delete cascade default auth.uid();
+
+alter table public.habit_checks
+add column if not exists user_id uuid references auth.users(id) on delete cascade default auth.uid();
+
+create table if not exists public.module_state (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -51,71 +66,102 @@ execute function public.set_updated_at();
 alter table public.tasks enable row level security;
 alter table public.habits enable row level security;
 alter table public.habit_checks enable row level security;
+alter table public.module_state enable row level security;
 
 drop policy if exists "Public read tasks" on public.tasks;
-create policy "Public read tasks"
+drop policy if exists "Users read own tasks" on public.tasks;
+create policy "Users read own tasks"
 on public.tasks for select
-to anon
-using (true);
+to authenticated
+using (auth.uid() = user_id);
 
 drop policy if exists "Public insert tasks" on public.tasks;
-create policy "Public insert tasks"
+drop policy if exists "Users insert own tasks" on public.tasks;
+create policy "Users insert own tasks"
 on public.tasks for insert
-to anon
-with check (true);
+to authenticated
+with check (auth.uid() = user_id);
 
 drop policy if exists "Public update tasks" on public.tasks;
-create policy "Public update tasks"
+drop policy if exists "Users update own tasks" on public.tasks;
+create policy "Users update own tasks"
 on public.tasks for update
-to anon
-using (true)
-with check (true);
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
 
 drop policy if exists "Public delete tasks" on public.tasks;
-create policy "Public delete tasks"
+drop policy if exists "Users delete own tasks" on public.tasks;
+create policy "Users delete own tasks"
 on public.tasks for delete
-to anon
-using (true);
+to authenticated
+using (auth.uid() = user_id);
 
 drop policy if exists "Public read habits" on public.habits;
-create policy "Public read habits"
+drop policy if exists "Users read own habits" on public.habits;
+create policy "Users read own habits"
 on public.habits for select
-to anon
-using (true);
+to authenticated
+using (auth.uid() = user_id);
 
 drop policy if exists "Public insert habits" on public.habits;
-create policy "Public insert habits"
+drop policy if exists "Users insert own habits" on public.habits;
+create policy "Users insert own habits"
 on public.habits for insert
-to anon
-with check (true);
+to authenticated
+with check (auth.uid() = user_id);
 
 drop policy if exists "Public update habits" on public.habits;
-create policy "Public update habits"
+drop policy if exists "Users update own habits" on public.habits;
+create policy "Users update own habits"
 on public.habits for update
-to anon
-using (true)
-with check (true);
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
 
 drop policy if exists "Public delete habits" on public.habits;
-create policy "Public delete habits"
+drop policy if exists "Users delete own habits" on public.habits;
+create policy "Users delete own habits"
 on public.habits for delete
-to anon
-using (true);
+to authenticated
+using (auth.uid() = user_id);
 
 drop policy if exists "Public read habit checks" on public.habit_checks;
-create policy "Public read habit checks"
+drop policy if exists "Users read own habit checks" on public.habit_checks;
+create policy "Users read own habit checks"
 on public.habit_checks for select
-to anon
-using (true);
+to authenticated
+using (auth.uid() = user_id);
 
 drop policy if exists "Public insert habit checks" on public.habit_checks;
-create policy "Public insert habit checks"
+drop policy if exists "Users insert own habit checks" on public.habit_checks;
+create policy "Users insert own habit checks"
 on public.habit_checks for insert
-to anon
-with check (true);
+to authenticated
+with check (auth.uid() = user_id);
 
 drop policy if exists "Public delete habit checks" on public.habit_checks;
-create policy "Public delete habit checks"
+drop policy if exists "Users delete own habit checks" on public.habit_checks;
+create policy "Users delete own habit checks"
 on public.habit_checks for delete
-to anon
-using (true);
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users read own module state" on public.module_state;
+create policy "Users read own module state"
+on public.module_state for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "Users upsert own module state" on public.module_state;
+create policy "Users upsert own module state"
+on public.module_state for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users update own module state" on public.module_state;
+create policy "Users update own module state"
+on public.module_state for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);

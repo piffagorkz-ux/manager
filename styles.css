@@ -571,9 +571,43 @@ select {
   gap: 14px;
 }
 
+.auth-panel[hidden],
 .module-home[hidden],
 .module-shell[hidden] {
   display: none;
+}
+
+.auth-panel {
+  display: grid;
+  place-items: center;
+  min-height: 420px;
+}
+
+.auth-form {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.auth-form h2,
+.auth-form p {
+  margin-bottom: 0;
+}
+
+.auth-form p,
+.auth-form small {
+  color: var(--muted);
+}
+
+.auth-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
 }
 
 .module-card {

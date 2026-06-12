@@ -245,6 +245,13 @@ const DAILY_QUOTES = {
 };
 
 const taskForm = document.querySelector("#taskForm");
+const authPanel = document.querySelector("#authPanel");
+const authForm = document.querySelector("#authForm");
+const authEmail = document.querySelector("#authEmail");
+const authPassword = document.querySelector("#authPassword");
+const authMessage = document.querySelector("#authMessage");
+const signupButton = document.querySelector("#signupButton");
+const logoutButton = document.querySelector("#logoutButton");
 const taskInput = document.querySelector("#taskInput");
 const taskList = document.querySelector("#taskList");
 const emptyState = document.querySelector("#emptyState");
@@ -311,6 +318,7 @@ let activePlan = "today";
 let activeWorkPlan = "today";
 let state = createEmptyState();
 let db = null;
+let currentUser = null;
 let selectedHabitId = null;
 let activeWishView = "active";
 let activeTheme = loadPreference(THEME_KEY, THEMES, "scheme1", THEME_ALIASES);
@@ -321,8 +329,19 @@ init();
 async function init() {
   applyPreferences();
   db = createSupabaseClient();
-  state = db ? await loadRemoteState() : loadLocalState();
-  await rollTomorrowIntoToday();
+  if (db) {
+    const { data } = await db.auth.getSession();
+    currentUser = data.session?.user || null;
+    db.auth.onAuthStateChange(async (_event, session) => {
+      currentUser = session?.user || null;
+      state = currentUser ? await loadRemoteState() : createEmptyState();
+      if (currentUser) await rollTomorrowIntoToday();
+      render();
+    });
+  }
+
+  state = db ? (currentUser ? await loadRemoteState() : createEmptyState()) : loadLocalState();
+  if (!db || currentUser) await rollTomorrowIntoToday();
   render();
 }
 
@@ -422,7 +441,7 @@ async function loadRemoteState() {
     return loadLocalState();
   }
 
-  const moduleState = loadModuleState();
+  const moduleState = await loadRemoteModuleState();
 
   return {
     lastOpened: localStorage.getItem(LAST_OPENED_KEY) || todayISO(),
@@ -449,6 +468,23 @@ async function loadRemoteState() {
     goals: moduleState.goals,
     wishes: moduleState.wishes,
   };
+}
+
+async function loadRemoteModuleState() {
+  if (!db || !currentUser) return loadModuleState();
+
+  const { data, error } = await db
+    .from("module_state")
+    .select("data")
+    .eq("user_id", currentUser.id)
+    .maybeSingle();
+
+  if (error) {
+    console.warn("Could not load module state", error);
+    return loadModuleState();
+  }
+
+  return normalizeModuleState(data?.data || {});
 }
 
 function loadModuleState() {
@@ -627,14 +663,20 @@ function saveState() {
 }
 
 function saveModuleState() {
-  localStorage.setItem(
-    MODULE_STORAGE_KEY,
-    JSON.stringify({
-      finance: state.finance || createEmptyFinance(),
-      goals: state.goals || [],
-      wishes: state.wishes || [],
-    }),
-  );
+  const data = {
+    finance: state.finance || createEmptyFinance(),
+    goals: state.goals || [],
+    wishes: state.wishes || [],
+  };
+  localStorage.setItem(MODULE_STORAGE_KEY, JSON.stringify(data));
+
+  if (db && currentUser) {
+    db.from("module_state")
+      .upsert({ user_id: currentUser.id, data, updated_at: new Date().toISOString() })
+      .then(({ error }) => {
+        if (error) console.warn("Could not save module state", error);
+      });
+  }
 }
 
 async function rollTomorrowIntoToday() {
@@ -748,6 +790,21 @@ function topModeFor(plan) {
 }
 
 function render() {
+  const needsAuth = Boolean(db && !currentUser);
+  authPanel.hidden = !needsAuth;
+  homePanel.hidden = needsAuth || activeModule !== "home";
+  plannerModule.hidden = needsAuth || !["planner", "habits"].includes(activeModule);
+  financeModule.hidden = needsAuth || activeModule !== "finance";
+  goalsModule.hidden = needsAuth || activeModule !== "goals";
+  wishesModule.hidden = needsAuth || activeModule !== "wishes";
+  wishCloud.hidden = needsAuth;
+
+  if (needsAuth) {
+    document.querySelector("h1").textContent = "Менеджер";
+    dateLine.textContent = readableDate();
+    return;
+  }
+
   const current = copy().views[activePlan];
   const visibleTasks = tasksForActiveView().sort((a, b) => {
     return b.createdAt - a.createdAt;
@@ -1600,6 +1657,38 @@ wishCloud.addEventListener("click", () => {
   activeModule = "wishes";
   render();
   wishCloud.blur();
+});
+
+authForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!db) return;
+
+  authMessage.textContent = "Входим...";
+  const { error } = await db.auth.signInWithPassword({
+    email: authEmail.value.trim(),
+    password: authPassword.value,
+  });
+  authMessage.textContent = error ? error.message : "";
+});
+
+signupButton.addEventListener("click", async () => {
+  if (!db) return;
+
+  authMessage.textContent = "Создаем аккаунт...";
+  const { error } = await db.auth.signUp({
+    email: authEmail.value.trim(),
+    password: authPassword.value,
+  });
+  authMessage.textContent = error ? error.message : "Аккаунт создан. Если Supabase попросит подтверждение, проверь email.";
+});
+
+logoutButton.addEventListener("click", async () => {
+  if (!db) return;
+  await db.auth.signOut();
+  activeModule = "home";
+  activePlan = "today";
+  state = createEmptyState();
+  render();
 });
 
 tabs.forEach((tab) => {
