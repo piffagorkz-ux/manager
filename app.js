@@ -1540,6 +1540,28 @@ function deleteWish(id) {
   render();
 }
 
+async function logout() {
+  currentUser = null;
+  activeModule = "home";
+  activePlan = "today";
+  activeWorkPlan = "today";
+  selectedHabitId = null;
+  activeWishView = "active";
+  state = createEmptyState();
+  authMessage.textContent = "";
+  authPassword.value = "";
+  render();
+
+  if (!db) return;
+  const { error } = await db.auth.signOut({ scope: "local" });
+  if (error) console.warn("Could not sign out cleanly", error);
+}
+
+function handleLogoutClick(event) {
+  event.stopPropagation();
+  logout();
+}
+
 taskForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const title = taskInput.value.trim();
@@ -1682,21 +1704,16 @@ signupButton.addEventListener("click", async () => {
   authMessage.textContent = error ? error.message : "Аккаунт создан. Если Supabase попросит подтверждение, проверь email.";
 });
 
-logoutButton.addEventListener("click", async () => {
-  if (!db) return;
-  currentUser = null;
-  activeModule = "home";
-  activePlan = "today";
-  activeWorkPlan = "today";
-  selectedHabitId = null;
-  activeWishView = "active";
-  state = createEmptyState();
-  authMessage.textContent = "";
-  authPassword.value = "";
-  render();
-  const { error } = await db.auth.signOut();
-  if (error) console.warn("Could not sign out cleanly", error);
-});
+logoutButton.addEventListener("click", handleLogoutClick);
+
+if (typeof document.addEventListener === "function") {
+  document.addEventListener("click", (event) => {
+    const target = event.target;
+    if (target && typeof target.closest === "function" && target.closest("#logoutButton")) {
+      logout();
+    }
+  });
+}
 
 tabs.forEach((tab) => {
   tab.addEventListener("click", () => {
