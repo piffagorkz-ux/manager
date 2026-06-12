@@ -5,6 +5,7 @@ const LAST_OPENED_KEY = "simple-plans-last-opened";
 const THEME_KEY = "simple-plans-theme";
 const LANG_KEY = "simple-plans-lang";
 const QUOTE_OFFSET_KEY = "manager-quote-offset";
+const FORCE_AUTH_KEY = "manager-force-auth";
 
 const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
 const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
@@ -323,6 +324,7 @@ let selectedHabitId = null;
 let activeWishView = "active";
 let activeTheme = loadPreference(THEME_KEY, THEMES, "scheme1", THEME_ALIASES);
 let activeLang = loadPreference(LANG_KEY, LANGS, "ru");
+let forceAuth = localStorage.getItem(FORCE_AUTH_KEY) === "1";
 
 init();
 
@@ -331,9 +333,9 @@ async function init() {
   db = createSupabaseClient();
   if (db) {
     const { data } = await db.auth.getSession();
-    currentUser = data.session?.user || null;
+    currentUser = forceAuth ? null : data.session?.user || null;
     db.auth.onAuthStateChange(async (_event, session) => {
-      currentUser = session?.user || null;
+      currentUser = forceAuth ? null : session?.user || null;
       state = currentUser ? await loadRemoteState() : createEmptyState();
       if (currentUser) await rollTomorrowIntoToday();
       render();
@@ -815,7 +817,7 @@ function topModeFor(plan) {
 }
 
 function render() {
-  const needsAuth = Boolean(db && !currentUser);
+  const needsAuth = Boolean(db && (forceAuth || !currentUser));
   authPanel.hidden = !needsAuth;
   homePanel.hidden = needsAuth || activeModule !== "home";
   plannerModule.hidden = needsAuth || !["planner", "habits"].includes(activeModule);
@@ -1566,6 +1568,8 @@ function deleteWish(id) {
 }
 
 async function logout() {
+  forceAuth = true;
+  localStorage.setItem(FORCE_AUTH_KEY, "1");
   currentUser = null;
   activeModule = "home";
   activePlan = "today";
@@ -1578,7 +1582,7 @@ async function logout() {
   render();
 
   if (!db) return;
-  const { error } = await db.auth.signOut({ scope: "local" });
+  const { error } = await db.auth.signOut();
   if (error) console.warn("Could not sign out cleanly", error);
 }
 
@@ -1721,7 +1725,14 @@ authForm.addEventListener("submit", async (event) => {
     email: identity.email,
     password: authPassword.value,
   });
-  authMessage.textContent = error ? "Логин или пароль не подошли." : "";
+  if (error) {
+    authMessage.textContent = "Логин или пароль не подошли.";
+    return;
+  }
+
+  forceAuth = false;
+  localStorage.removeItem(FORCE_AUTH_KEY);
+  authMessage.textContent = "";
 });
 
 signupButton.addEventListener("click", async () => {
@@ -1753,12 +1764,18 @@ signupButton.addEventListener("click", async () => {
       email: identity.email,
       password: authPassword.value,
     });
+    if (!loginError) {
+      forceAuth = false;
+      localStorage.removeItem(FORCE_AUTH_KEY);
+    }
     authMessage.textContent = loginError
       ? "Аккаунт создан, но Supabase просит подтверждение email. В Auth отключи Confirm email."
       : "";
     return;
   }
 
+  forceAuth = false;
+  localStorage.removeItem(FORCE_AUTH_KEY);
   authMessage.textContent = "";
 });
 
