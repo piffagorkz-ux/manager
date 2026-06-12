@@ -1684,11 +1684,18 @@ signupButton.addEventListener("click", async () => {
 
 logoutButton.addEventListener("click", async () => {
   if (!db) return;
-  await db.auth.signOut();
+  currentUser = null;
   activeModule = "home";
   activePlan = "today";
+  activeWorkPlan = "today";
+  selectedHabitId = null;
+  activeWishView = "active";
   state = createEmptyState();
+  authMessage.textContent = "";
+  authPassword.value = "";
   render();
+  const { error } = await db.auth.signOut();
+  if (error) console.warn("Could not sign out cleanly", error);
 });
 
 tabs.forEach((tab) => {
