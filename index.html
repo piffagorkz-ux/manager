@@ -34,9 +34,9 @@
         <section class="auth-panel" id="authPanel" hidden>
           <form class="auth-form" id="authForm">
             <h2>Вход</h2>
-            <p>Войди или зарегистрируйся, чтобы данные были только твоими.</p>
-            <input id="authEmail" type="email" placeholder="Email" autocomplete="email" required />
-            <input id="authPassword" type="password" placeholder="Пароль" autocomplete="current-password" required />
+            <p>Один раз войди или зарегистрируйся. Потом приложение будет открываться сразу.</p>
+            <input id="authEmail" type="text" placeholder="Логин" autocomplete="username" minlength="3" required />
+            <input id="authPassword" type="password" placeholder="Пароль" autocomplete="current-password" minlength="6" required />
             <div class="auth-actions">
               <button class="add-button" type="submit" data-auth-action="login">Войти</button>
               <button class="quiet-button" type="button" id="signupButton">Регистрация</button>

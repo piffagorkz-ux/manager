@@ -369,7 +369,32 @@ function createSupabaseClient() {
   const key = config.SUPABASE_ANON_KEY;
 
   if (!url || !key || !window.supabase) return null;
-  return window.supabase.createClient(url, key);
+  return window.supabase.createClient(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  });
+}
+
+function getAuthIdentity() {
+  const rawLogin = authEmail.value.trim().toLowerCase();
+  if (!rawLogin) return { error: "Введите логин." };
+
+  if (rawLogin.includes("@")) {
+    return { email: rawLogin, login: rawLogin.split("@")[0] };
+  }
+
+  const login = rawLogin.replace(/\s+/g, "");
+  if (!/^[a-z0-9._-]{3,32}$/.test(login)) {
+    return { error: "Логин: 3-32 символа, латиница, цифры, точка, дефис или _." };
+  }
+
+  return {
+    email: `${login}@users.manager.app`,
+    login,
+  };
 }
 
 function createEmptyState() {
@@ -1685,23 +1710,56 @@ authForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!db) return;
 
+  const identity = getAuthIdentity();
+  if (identity.error) {
+    authMessage.textContent = identity.error;
+    return;
+  }
+
   authMessage.textContent = "Входим...";
   const { error } = await db.auth.signInWithPassword({
-    email: authEmail.value.trim(),
+    email: identity.email,
     password: authPassword.value,
   });
-  authMessage.textContent = error ? error.message : "";
+  authMessage.textContent = error ? "Логин или пароль не подошли." : "";
 });
 
 signupButton.addEventListener("click", async () => {
   if (!db) return;
 
+  const identity = getAuthIdentity();
+  if (identity.error) {
+    authMessage.textContent = identity.error;
+    return;
+  }
+
   authMessage.textContent = "Создаем аккаунт...";
-  const { error } = await db.auth.signUp({
-    email: authEmail.value.trim(),
+  const { data, error } = await db.auth.signUp({
+    email: identity.email,
     password: authPassword.value,
+    options: {
+      data: {
+        login: identity.login,
+      },
+    },
   });
-  authMessage.textContent = error ? error.message : "Аккаунт создан. Если Supabase попросит подтверждение, проверь email.";
+  if (error) {
+    authMessage.textContent = error.message;
+    return;
+  }
+
+  if (!data.session) {
+    const { error: loginError } = await db.auth.signInWithPassword({
+      email: identity.email,
+      password: authPassword.value,
+    });
+    authMessage.textContent = loginError
+      ? "Аккаунт создан, но Supabase просит подтверждение email. В Auth отключи Confirm email."
+      : "";
+    return;
+  }
+
+  authMessage.textContent = "";
 });
 
 logoutButton.addEventListener("click", handleLogoutClick);
