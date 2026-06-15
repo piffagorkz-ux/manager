@@ -1,16 +1,16 @@
 :root {
-  color-scheme: light;
-  --bg: #f7eef3;
-  --panel: #ffffff;
-  --ink: #242582;
-  --muted: #553d67;
-  --line: #ead6e2;
-  --soft: #f8d8e3;
-  --accent: #f64c72;
-  --accent-ink: #2f2fa2;
-  --danger: #f64c72;
-  --shadow: 0 18px 48px rgba(28, 33, 29, 0.08);
-  --focus: rgba(246, 76, 114, 0.22);
+  color-scheme: dark;
+  --bg: #151313;
+  --panel: #1d1b1d;
+  --ink: #fff8f4;
+  --muted: #a99f9e;
+  --line: rgba(255, 255, 255, 0.1);
+  --soft: #2b2328;
+  --accent: #ff5d93;
+  --accent-ink: #ffffff;
+  --danger: #ff6b74;
+  --shadow: 0 28px 70px rgba(0, 0, 0, 0.42);
+  --focus: rgba(255, 93, 147, 0.28);
   font-family: "Poppins", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -175,6 +175,17 @@
   --focus: rgba(103, 194, 47, 0.3);
 }
 
+:root {
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --glass: color-mix(in srgb, var(--panel) 78%, transparent);
+  --glass-strong: color-mix(in srgb, var(--panel) 92%, var(--bg));
+  --card-shine: linear-gradient(145deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.02) 42%, rgba(0, 0, 0, 0.18));
+  --accent-glow: color-mix(in srgb, var(--accent) 34%, transparent);
+  --ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -186,9 +197,25 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 18% -8%, color-mix(in srgb, var(--accent) 22%, transparent) 0 20rem, transparent 34rem),
+    radial-gradient(circle at 112% 28%, color-mix(in srgb, var(--accent) 18%, transparent) 0 16rem, transparent 30rem),
+    linear-gradient(145deg, color-mix(in srgb, var(--bg) 72%, #000000), var(--bg) 48%, color-mix(in srgb, var(--panel) 42%, var(--bg)));
   color: var(--ink);
   overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.52), transparent 72%);
 }
 
 button,
@@ -206,13 +233,14 @@ button {
   min-height: 100vh;
   display: grid;
   place-items: start center;
-  padding: 28px;
+  padding: 34px;
   width: 100%;
 }
 
 .tracker {
   width: min(920px, 100%);
   min-width: 0;
+  perspective: 1200px;
 }
 
 .header {
@@ -220,7 +248,8 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  animation: panel-enter 0.48s var(--ease-premium) both;
 }
 
 .date-line {
@@ -238,9 +267,10 @@ p {
 
 h1 {
   margin-bottom: 0;
-  font-size: clamp(2.05rem, 5.95vw, 4.1rem);
+  font-size: clamp(1.9rem, 5.4vw, 3.55rem);
   line-height: 0.95;
   letter-spacing: 0;
+  text-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
 }
 
 .quiet-button,
@@ -258,19 +288,22 @@ h1 {
 .habit-row-title,
 .habit-back {
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   transition:
-    background 0.16s ease,
-    color 0.16s ease,
-    border-color 0.16s ease,
-    transform 0.16s ease;
+    background 0.24s var(--ease-premium),
+    box-shadow 0.24s var(--ease-premium),
+    color 0.24s var(--ease-premium),
+    border-color 0.24s var(--ease-premium),
+    opacity 0.24s var(--ease-premium),
+    transform 0.24s var(--ease-premium);
 }
 
 .quiet-button {
   border: 1px solid var(--line);
-  background: var(--panel);
+  background: var(--glass);
   color: var(--muted);
   padding: 10px 12px;
+  backdrop-filter: blur(18px);
 }
 
 .settings-button {
@@ -280,15 +313,17 @@ h1 {
   width: 46px;
   height: 46px;
   border: 1px solid var(--line);
-  background: var(--panel);
+  background: var(--glass);
   color: var(--muted);
   font-size: 1.05rem;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
 }
 
 .settings-button.is-active {
-  border-color: var(--accent);
-  background: var(--soft);
-  color: var(--accent-ink);
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--line));
+  background: color-mix(in srgb, var(--accent) 16%, var(--glass));
+  color: var(--ink);
 }
 
 .quiet-button:hover,
@@ -296,7 +331,7 @@ h1 {
 .settings-button:hover,
 .plan-card:hover,
 .task-action:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .tabs {
@@ -315,12 +350,13 @@ h1 {
   gap: 8px;
   min-width: 0;
   min-height: 48px;
-  border: 1px solid transparent;
-  background: transparent;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 54%, transparent);
   color: var(--muted);
   padding: 9px 10px;
   line-height: 1.15;
   text-align: center;
+  backdrop-filter: blur(16px);
 }
 
 .tab-icon {
@@ -341,11 +377,14 @@ h1 {
 }
 
 .tab.is-active {
-  border-color: var(--accent);
-  background: var(--soft);
-  color: var(--accent-ink);
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 32%, var(--panel)), color-mix(in srgb, var(--soft) 72%, var(--panel))),
+    var(--panel);
+  color: var(--ink);
   font-weight: 800;
   transform: none;
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .add-form {
@@ -353,21 +392,23 @@ h1 {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   padding: 12px;
-  background: var(--panel);
+  background: var(--glass);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow);
+  backdrop-filter: blur(20px);
+  animation: panel-enter 0.46s var(--ease-premium) both;
 }
 
 input {
   width: 100%;
   min-height: 52px;
   border: 1px solid color-mix(in srgb, var(--accent) 46%, var(--line));
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--panel) 72%, var(--bg));
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--panel) 74%, #000000);
   color: var(--ink);
   padding: 0 16px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 16px 32px rgba(0, 0, 0, 0.14);
 }
 
 input:focus,
@@ -382,10 +423,13 @@ button:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--accent);
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.35), transparent 26%),
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 96%, #ffffff), color-mix(in srgb, var(--accent) 72%, #ffb36b));
   color: var(--accent-ink);
   font-weight: 800;
   padding: 0 18px;
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .add-button:hover {
@@ -394,7 +438,7 @@ button:focus-visible {
 
 .add-button:active {
   background: color-mix(in srgb, var(--accent) 78%, var(--bg));
-  transform: translateY(0);
+  transform: scale(0.98);
 }
 
 .add-icon {
@@ -568,7 +612,8 @@ select {
 .module-home {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  gap: 18px;
+  animation: panel-enter 0.52s var(--ease-premium) both;
 }
 
 .auth-panel[hidden],
@@ -588,10 +633,11 @@ select {
   display: grid;
   gap: 12px;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  padding: 18px;
+  border-radius: var(--radius-lg);
+  background: var(--glass);
+  padding: 22px;
   box-shadow: var(--shadow);
+  backdrop-filter: blur(22px);
 }
 
 .auth-form h2,
@@ -612,30 +658,75 @@ select {
 
 .module-card {
   aspect-ratio: 1;
+  position: relative;
   display: grid;
   align-content: space-between;
   justify-items: start;
   border: 1px solid var(--line);
-  background: var(--panel);
+  background:
+    radial-gradient(circle at 76% 16%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 30%),
+    var(--card-shine),
+    color-mix(in srgb, var(--panel) 86%, transparent);
   color: var(--ink);
-  padding: 16px;
+  padding: 18px;
   text-align: left;
   box-shadow: var(--shadow);
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  transform-style: preserve-3d;
+  animation: card-enter 0.54s var(--ease-premium) both;
 }
 
 .module-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-5px) rotateX(2deg) rotateY(-2deg);
+  box-shadow: 0 34px 78px rgba(0, 0, 0, 0.48);
+}
+
+.module-card:active {
+  transform: scale(0.98);
+}
+
+.module-card::after {
+  content: "";
+  position: absolute;
+  right: -22%;
+  bottom: -30%;
+  width: 74%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 24%, transparent), transparent 68%);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.module-card:nth-child(1) {
+  transform: rotate(-1.4deg);
+}
+
+.module-card:nth-child(2) {
+  transform: rotate(1.1deg) translateY(8px);
+}
+
+.module-card:nth-child(3) {
+  transform: rotate(-0.8deg) translateY(3px);
+}
+
+.module-card:nth-child(4) {
+  transform: rotate(1.5deg) translateY(10px);
 }
 
 .module-icon {
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 8px;
-  background: var(--soft);
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.42), transparent 34%),
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 82%, #ffffff), color-mix(in srgb, var(--accent) 62%, var(--soft)));
   color: var(--accent-ink);
   font-weight: 900;
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--accent) 28%, transparent);
 }
 
 .module-card strong {
@@ -1628,5 +1719,405 @@ select {
 
   .plan-card span {
     font-size: 1.45rem;
+  }
+}
+
+/* Premium visual layer */
+
+@keyframes panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.module-home {
+  gap: 18px;
+  animation: panel-enter 0.52s var(--ease-premium) both;
+}
+
+.auth-form,
+.list-panel,
+.add-form,
+.mini-form,
+.goal-form,
+.finance-analytics,
+.habit-card,
+.settings-panel,
+.wishes-panel {
+  background: var(--glass);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(22px);
+}
+
+.auth-form,
+.list-panel,
+.settings-panel,
+.wishes-panel,
+.habit-card {
+  border: 1px solid var(--line);
+}
+
+.add-form,
+.list-panel,
+.module-home,
+.finance-panel,
+.goals-panel,
+.wishes-panel,
+.settings-panel,
+.habits-panel,
+.auth-form {
+  animation: panel-enter 0.48s var(--ease-premium) both;
+}
+
+.module-card,
+.plan-card,
+.task-item,
+.simple-row,
+.wish-row,
+.habit-row,
+.theme-choice,
+.lang-choice,
+.finance-icon-button,
+.money-button,
+.module-back,
+.habit-back,
+.habit-today,
+.habit-delete,
+.wish-cloud {
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+}
+
+.module-card {
+  position: relative;
+  overflow: hidden;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at 76% 16%, color-mix(in srgb, var(--accent) 28%, transparent), transparent 30%),
+    var(--card-shine),
+    color-mix(in srgb, var(--panel) 86%, transparent);
+  backdrop-filter: blur(20px);
+  transform-style: preserve-3d;
+  animation: card-enter 0.54s var(--ease-premium) both;
+}
+
+.module-card::after {
+  content: "";
+  position: absolute;
+  right: -24%;
+  bottom: -34%;
+  width: 76%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 24%, transparent), transparent 68%);
+  pointer-events: none;
+}
+
+.module-card:nth-child(1) {
+  transform: rotate(-1.4deg);
+}
+
+.module-card:nth-child(2) {
+  transform: rotate(1deg) translateY(8px);
+}
+
+.module-card:nth-child(3) {
+  transform: rotate(-0.8deg) translateY(4px);
+}
+
+.module-card:nth-child(4) {
+  transform: rotate(1.5deg) translateY(10px);
+}
+
+.module-card:hover {
+  transform: translateY(-5px) rotateX(2deg) rotateY(-2deg);
+  box-shadow: 0 34px 78px rgba(0, 0, 0, 0.48);
+}
+
+.module-card:active,
+.plan-card:active,
+.add-button:active,
+.settings-button:active,
+.task-action:active,
+.wish-cloud:active,
+.finance-icon-button:active,
+.money-button:active {
+  transform: scale(0.98);
+}
+
+.module-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.42), transparent 34%),
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 82%, #ffffff), color-mix(in srgb, var(--accent) 62%, var(--soft)));
+  color: var(--accent-ink);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.module-card strong,
+.plan-card span,
+.task-title,
+.habit-row-title,
+.wish-content strong {
+  text-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.daily-quote {
+  padding: 8px 10px 4px;
+  color: color-mix(in srgb, var(--muted) 84%, transparent);
+}
+
+.daily-quote p {
+  font-size: clamp(1.5rem, 3.4vw, 2.15rem);
+}
+
+.quote-button {
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
+.tabs {
+  gap: 14px;
+}
+
+.tab {
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 54%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.tab.is-active {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--line));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 32%, var(--panel)), color-mix(in srgb, var(--soft) 72%, var(--panel))),
+    var(--panel);
+  color: var(--ink);
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.add-form {
+  border-radius: var(--radius-md);
+}
+
+input,
+select,
+.color-field,
+.simple-row,
+.wish-row,
+.habit-row,
+.theme-choice,
+.lang-choice,
+.finance-icon-button,
+.module-back,
+.habit-back,
+.habit-today,
+.habit-delete,
+.simple-row button,
+.wish-row button {
+  border-radius: var(--radius-sm);
+}
+
+input,
+select {
+  background: color-mix(in srgb, var(--panel) 74%, #000000);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 16px 32px rgba(0, 0, 0, 0.14);
+}
+
+.add-button {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.35), transparent 26%),
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 96%, #ffffff), color-mix(in srgb, var(--accent) 72%, #ffb36b));
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.overview {
+  gap: 14px;
+  margin: 24px 0;
+}
+
+.plan-card {
+  border-radius: 22px;
+  background:
+    var(--card-shine),
+    color-mix(in srgb, var(--panel) 82%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.plan-card.is-current {
+  border-color: color-mix(in srgb, var(--accent) 54%, var(--line));
+  background:
+    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.18), transparent 24%),
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 36%, var(--panel)), color-mix(in srgb, var(--soft) 72%, var(--panel)));
+  color: var(--ink);
+  box-shadow: 0 22px 54px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.plan-card.is-current span,
+.plan-card.is-current strong {
+  color: var(--ink);
+}
+
+.list-head {
+  padding: 20px 20px 12px;
+}
+
+.task-item {
+  background: color-mix(in srgb, var(--panel) 26%, transparent);
+  animation: item-enter 0.32s var(--ease-premium) both;
+}
+
+.task-action,
+.simple-row button,
+.wish-row button,
+.habit-today,
+.habit-delete,
+.module-back,
+.habit-back,
+.finance-icon-button {
+  background: color-mix(in srgb, var(--panel) 78%, var(--bg));
+}
+
+.task-action.delete:hover {
+  background: color-mix(in srgb, var(--danger) 18%, var(--panel));
+}
+
+.mini-form,
+.goal-form,
+.finance-analytics,
+.simple-row,
+.wish-row,
+.habit-row,
+.habit-card,
+.theme-choice,
+.lang-choice,
+.finance-icon-button,
+.money-button,
+.color-field {
+  background:
+    var(--card-shine),
+    color-mix(in srgb, var(--panel) 84%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.money-button {
+  color: #fffaf4;
+}
+
+.money-button.income {
+  background: linear-gradient(135deg, #3fd57c, #178f59);
+}
+
+.money-button.expense {
+  background: linear-gradient(135deg, #ff7a87, #d94a62);
+}
+
+.finance-icon-button.income,
+.simple-row.income strong {
+  color: #63e28d;
+}
+
+.finance-icon-button.expense,
+.simple-row.expense strong {
+  color: #ff8a94;
+}
+
+.finance-donut {
+  filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.28));
+}
+
+.wish-cloud {
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.28), transparent 30%),
+    color-mix(in srgb, var(--panel) 88%, var(--bg));
+  color: color-mix(in srgb, var(--accent) 76%, var(--ink));
+  backdrop-filter: blur(24px);
+}
+
+.habit-check.is-checked,
+.habit-day.is-checked,
+.habit-today.is-checked {
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--habit-color) 22%, transparent);
+}
+
+.theme-choice.is-selected,
+.lang-choice.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--line));
+  color: var(--ink);
+  box-shadow: 0 18px 36px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+@media (max-width: 760px) {
+  .app {
+    padding-top: 18px;
+  }
+
+  .module-home {
+    gap: 12px;
+  }
+
+  .module-card {
+    min-height: 154px;
+    padding: 15px;
+  }
+
+  .module-card:nth-child(1),
+  .module-card:nth-child(2),
+  .module-card:nth-child(3),
+  .module-card:nth-child(4) {
+    transform: none;
+  }
+
+  .module-card:hover {
+    transform: translateY(-3px);
+  }
+
+  .overview {
+    gap: 10px;
+  }
+
+  .plan-card {
+    border-radius: 18px;
+  }
+
+  .list-panel,
+  .auth-form,
+  .settings-panel,
+  .wishes-panel,
+  .habit-card {
+    border-radius: 22px;
   }
 }
