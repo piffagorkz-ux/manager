@@ -6,6 +6,7 @@ const THEME_KEY = "simple-plans-theme";
 const LANG_KEY = "simple-plans-lang";
 const QUOTE_OFFSET_KEY = "manager-quote-offset";
 const FORCE_AUTH_KEY = "manager-force-auth";
+const WISH_CLOUD_POSITION_KEY = "manager-wish-cloud-position";
 
 const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
 const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
@@ -325,6 +326,9 @@ let activeWishView = "active";
 let activeTheme = loadPreference(THEME_KEY, THEMES, "scheme1", THEME_ALIASES);
 let activeLang = loadPreference(LANG_KEY, LANGS, "ru");
 let forceAuth = localStorage.getItem(FORCE_AUTH_KEY) === "1";
+let wishCloudPosition = loadWishCloudPosition();
+let wishCloudDrag = null;
+let wishCloudSuppressClickUntil = 0;
 
 init();
 
@@ -345,6 +349,7 @@ async function init() {
   state = db ? (currentUser ? await loadRemoteState() : createEmptyState()) : loadLocalState();
   if (!db || currentUser) await rollTomorrowIntoToday();
   render();
+  applyWishCloudPosition();
 }
 
 function copy() {
@@ -363,6 +368,60 @@ function loadPreference(key, allowed, fallback, aliases = {}) {
 function applyPreferences() {
   document.documentElement.dataset.theme = activeTheme;
   document.documentElement.lang = activeLang;
+}
+
+function loadWishCloudPosition() {
+  const saved = localStorage.getItem(WISH_CLOUD_POSITION_KEY);
+  if (!saved) return null;
+
+  try {
+    const value = JSON.parse(saved);
+    if (Number.isFinite(value?.x) && Number.isFinite(value?.y)) {
+      return { x: value.x, y: value.y };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function clampWishCloudPosition(x, y) {
+  const size = wishCloud.offsetWidth || 58;
+  const padding = 12;
+  const maxX = Math.max(padding, window.innerWidth - size - padding);
+  const maxY = Math.max(padding, window.innerHeight - size - padding);
+
+  return {
+    x: Math.min(Math.max(x, padding), maxX),
+    y: Math.min(Math.max(y, padding), maxY),
+  };
+}
+
+function applyWishCloudPosition() {
+  if (!wishCloudPosition) {
+    wishCloud.style.left = "";
+    wishCloud.style.top = "";
+    wishCloud.style.right = "";
+    wishCloud.style.bottom = "";
+    return;
+  }
+
+  const position = clampWishCloudPosition(wishCloudPosition.x, wishCloudPosition.y);
+  wishCloudPosition = position;
+  wishCloud.style.left = `${position.x}px`;
+  wishCloud.style.top = `${position.y}px`;
+  wishCloud.style.right = "auto";
+  wishCloud.style.bottom = "auto";
+}
+
+function saveWishCloudPosition() {
+  if (!wishCloudPosition) {
+    localStorage.removeItem(WISH_CLOUD_POSITION_KEY);
+    return;
+  }
+
+  localStorage.setItem(WISH_CLOUD_POSITION_KEY, JSON.stringify(wishCloudPosition));
 }
 
 function createSupabaseClient() {
@@ -845,6 +904,7 @@ function render() {
   wishesModule.hidden = activeModule !== "wishes";
 
   dateLine.textContent = readableDate();
+  applyWishCloudPosition();
   planTitle.textContent = current.title;
   planHint.textContent = current.hint;
   emptyHint.textContent = current.empty;
@@ -1704,7 +1764,68 @@ wishTabs.forEach((tab) => {
   });
 });
 
+wishCloud.addEventListener("pointerdown", (event) => {
+  if (event.button !== undefined && event.button !== 0) return;
+
+  const rect = wishCloud.getBoundingClientRect();
+  wishCloudDrag = {
+    pointerId: event.pointerId,
+    startX: event.clientX,
+    startY: event.clientY,
+    offsetX: event.clientX - rect.left,
+    offsetY: event.clientY - rect.top,
+    moved: false,
+  };
+
+  wishCloud.classList.add("is-dragging");
+  if (typeof wishCloud.setPointerCapture === "function") {
+    wishCloud.setPointerCapture(event.pointerId);
+  }
+});
+
+wishCloud.addEventListener("pointermove", (event) => {
+  if (!wishCloudDrag || event.pointerId !== wishCloudDrag.pointerId) return;
+
+  const nextX = event.clientX - wishCloudDrag.offsetX;
+  const nextY = event.clientY - wishCloudDrag.offsetY;
+  const deltaX = event.clientX - wishCloudDrag.startX;
+  const deltaY = event.clientY - wishCloudDrag.startY;
+
+  if (!wishCloudDrag.moved && Math.hypot(deltaX, deltaY) > 6) {
+    wishCloudDrag.moved = true;
+  }
+
+  if (!wishCloudDrag.moved) return;
+
+  event.preventDefault();
+  wishCloudPosition = clampWishCloudPosition(nextX, nextY);
+  applyWishCloudPosition();
+});
+
+wishCloud.addEventListener("pointerup", (event) => {
+  if (!wishCloudDrag || event.pointerId !== wishCloudDrag.pointerId) return;
+
+  const moved = wishCloudDrag.moved;
+  if (typeof wishCloud.releasePointerCapture === "function") {
+    wishCloud.releasePointerCapture(event.pointerId);
+  }
+
+  wishCloud.classList.remove("is-dragging");
+  wishCloudDrag = null;
+
+  if (moved) {
+    wishCloudSuppressClickUntil = Date.now() + 250;
+    saveWishCloudPosition();
+  }
+});
+
+wishCloud.addEventListener("pointercancel", () => {
+  wishCloud.classList.remove("is-dragging");
+  wishCloudDrag = null;
+});
+
 wishCloud.addEventListener("click", () => {
+  if (Date.now() < wishCloudSuppressClickUntil) return;
   activeModule = "wishes";
   render();
   wishCloud.blur();

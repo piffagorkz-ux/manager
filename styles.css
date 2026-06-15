@@ -1033,6 +1033,13 @@ select {
   color: color-mix(in srgb, var(--accent) 72%, var(--muted));
   box-shadow: var(--shadow);
   font-size: 1.55rem;
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+}
+
+.wish-cloud.is-dragging {
+  cursor: grabbing;
 }
 
 .wishes-panel {
