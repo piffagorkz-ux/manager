@@ -7,6 +7,7 @@ const LANG_KEY = "simple-plans-lang";
 const QUOTE_OFFSET_KEY = "manager-quote-offset";
 const FORCE_AUTH_KEY = "manager-force-auth";
 const WISH_CLOUD_POSITION_KEY = "manager-wish-cloud-position";
+const PROFILE_NAME_KEY = "manager-profile-name";
 
 const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
 const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
@@ -277,6 +278,8 @@ const langChoices = document.querySelectorAll(".lang-choice");
 const themeTitle = document.querySelector("#themeTitle");
 const languageTitle = document.querySelector("#languageTitle");
 const cleanupTitle = document.querySelector("#cleanupTitle");
+const profileNameTitle = document.querySelector("#profileNameTitle");
+const profileNameInput = document.querySelector("#profileNameInput");
 const settingsButton = document.querySelector("#settingsButton");
 const homePanel = document.querySelector("#homePanel");
 const quoteText = document.querySelector("#quoteText");
@@ -326,6 +329,7 @@ let activeWishView = "active";
 let activeTheme = loadPreference(THEME_KEY, THEMES, "scheme1", THEME_ALIASES);
 let activeLang = loadPreference(LANG_KEY, LANGS, "ru");
 let forceAuth = localStorage.getItem(FORCE_AUTH_KEY) === "1";
+let profileName = localStorage.getItem(PROFILE_NAME_KEY)?.trim() || "";
 let wishCloudPosition = loadWishCloudPosition();
 let wishCloudDrag = null;
 let wishCloudSuppressClickUntil = 0;
@@ -886,7 +890,7 @@ function render() {
   wishCloud.hidden = needsAuth;
 
   if (needsAuth) {
-    document.querySelector("h1").textContent = "Менеджер";
+    document.querySelector("h1").textContent = homeTitleText();
     dateLine.textContent = readableDate();
     return;
   }
@@ -914,6 +918,7 @@ function render() {
   settingsPanel.hidden = activePlan !== "settings";
   habitsPanel.hidden = activePlan !== "habits";
   renderStaticText();
+  document.querySelector("h1").textContent = activeModule === "home" ? homeTitleText() : copy().appTitle;
 
   tabs.forEach((tab) => {
     const tabPlan = tab.dataset.plan;
@@ -1151,6 +1156,11 @@ function formatMoney(value) {
   }).format(value);
 }
 
+function homeTitleText() {
+  if (profileName) return profileName;
+  return activeLang === "ru" ? "Менеджер" : "Manager";
+}
+
 function renderStaticText() {
   const text = copy();
   document.title = text.appTitle;
@@ -1189,6 +1199,11 @@ function renderSettingsState() {
   langChoices.forEach((button) => {
     button.classList.toggle("is-selected", button.dataset.lang === activeLang);
   });
+  profileNameTitle.textContent = activeLang === "ru" ? "Имя" : "Name";
+  profileNameInput.placeholder = activeLang === "ru" ? "Твое имя" : "Your name";
+  if (profileNameInput.value !== profileName) {
+    profileNameInput.value = profileName;
+  }
 }
 
 function renderHabits() {
@@ -1922,6 +1937,16 @@ settingsButton.addEventListener("click", () => {
   activeModule = "planner";
   openPlan("settings");
   settingsButton.blur();
+});
+
+profileNameInput.addEventListener("input", () => {
+  profileName = profileNameInput.value.trim().slice(0, 32);
+  if (profileName) {
+    localStorage.setItem(PROFILE_NAME_KEY, profileName);
+  } else {
+    localStorage.removeItem(PROFILE_NAME_KEY);
+  }
+  document.querySelector("h1").textContent = activeModule === "home" ? homeTitleText() : copy().appTitle;
 });
 
 moduleCards.forEach((card) => {
