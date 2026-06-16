@@ -9,6 +9,7 @@ const FORCE_AUTH_KEY = "manager-force-auth";
 const WISH_CLOUD_POSITION_KEY = "manager-wish-cloud-position";
 const PROFILE_NAME_KEY = "manager-profile-name";
 const GOAL_SECTIONS_KEY = "manager-goal-sections";
+const NOTIFICATION_SETTINGS_KEY = "manager-notification-settings";
 
 const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
 const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
@@ -281,6 +282,11 @@ const languageTitle = document.querySelector("#languageTitle");
 const cleanupTitle = document.querySelector("#cleanupTitle");
 const profileNameTitle = document.querySelector("#profileNameTitle");
 const profileNameInput = document.querySelector("#profileNameInput");
+const notificationsTitle = document.querySelector("#notificationsTitle");
+const notificationsStatus = document.querySelector("#notificationsStatus");
+const notificationsEnable = document.querySelector("#notificationsEnable");
+const notificationsTest = document.querySelector("#notificationsTest");
+const reminderTimeInput = document.querySelector("#reminderTimeInput");
 const settingsButton = document.querySelector("#settingsButton");
 const homePanel = document.querySelector("#homePanel");
 const quoteText = document.querySelector("#quoteText");
@@ -343,6 +349,8 @@ let wishCloudPosition = loadWishCloudPosition();
 let wishCloudDrag = null;
 let wishCloudSuppressClickUntil = 0;
 let goalSectionsOpen = loadGoalSectionsState();
+let notificationSettings = loadNotificationSettings();
+let reminderIntervalId = null;
 
 init();
 
@@ -364,6 +372,18 @@ async function init() {
   if (!db || currentUser) await rollTomorrowIntoToday();
   render();
   applyWishCloudPosition();
+  startReminderWatcher();
+  checkDailyReminder();
+
+  if (typeof document.addEventListener === "function") {
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) checkDailyReminder();
+    });
+  }
+
+  if (typeof window.addEventListener === "function") {
+    window.addEventListener("focus", checkDailyReminder);
+  }
 }
 
 function copy() {
@@ -420,6 +440,94 @@ function loadGoalSectionsState() {
 
 function saveGoalSectionsState() {
   localStorage.setItem(GOAL_SECTIONS_KEY, JSON.stringify(goalSectionsOpen));
+}
+
+function loadNotificationSettings() {
+  const fallback = {
+    enabled: false,
+    reminderTime: "09:00",
+    lastReminderDate: "",
+  };
+  const saved = localStorage.getItem(NOTIFICATION_SETTINGS_KEY);
+  if (!saved) return fallback;
+
+  try {
+    const value = JSON.parse(saved);
+    return {
+      enabled: Boolean(value?.enabled),
+      reminderTime: /^\d{2}:\d{2}$/.test(value?.reminderTime) ? value.reminderTime : "09:00",
+      lastReminderDate: typeof value?.lastReminderDate === "string" ? value.lastReminderDate : "",
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveNotificationSettings() {
+  localStorage.setItem(NOTIFICATION_SETTINGS_KEY, JSON.stringify(notificationSettings));
+}
+
+function notificationsSupported() {
+  return typeof window !== "undefined" && "Notification" in window;
+}
+
+function notificationPermission() {
+  return notificationsSupported() ? Notification.permission : "denied";
+}
+
+function todayTaskCount() {
+  return tasksFor("today").filter((task) => !task.done).length;
+}
+
+function reminderTimeReached() {
+  const [hours, minutes] = notificationSettings.reminderTime.split(":").map(Number);
+  const now = new Date();
+  if (now.getHours() > hours) return true;
+  return now.getHours() === hours && now.getMinutes() >= minutes;
+}
+
+function showNotification(title, body) {
+  if (!notificationsSupported() || notificationPermission() !== "granted") return;
+
+  new Notification(title, {
+    body,
+    icon: "icons/icon-192.png",
+    badge: "icons/icon-192.png",
+    tag: "today-reminder",
+  });
+}
+
+function reminderTitle() {
+  return activeLang === "ru" ? "Планы на сегодня" : "Today plans";
+}
+
+function reminderBody(count) {
+  if (activeLang === "ru") {
+    return count === 1 ? "У тебя осталась 1 задача на сегодня." : `У тебя осталось ${count} задач на сегодня.`;
+  }
+  return count === 1 ? "You have 1 task left for today." : `You have ${count} tasks left for today.`;
+}
+
+function checkDailyReminder() {
+  if (!notificationSettings.enabled) return;
+  if (notificationPermission() !== "granted") return;
+  if (!reminderTimeReached()) return;
+
+  const today = todayISO();
+  if (notificationSettings.lastReminderDate === today) return;
+
+  const count = todayTaskCount();
+  if (!count) return;
+
+  showNotification(reminderTitle(), reminderBody(count));
+  notificationSettings.lastReminderDate = today;
+  saveNotificationSettings();
+  renderSettingsState();
+}
+
+function startReminderWatcher() {
+  if (reminderIntervalId) clearInterval(reminderIntervalId);
+  reminderIntervalId = window.setInterval(checkDailyReminder, 60000);
 }
 
 function clampWishCloudPosition(x, y) {
@@ -1251,6 +1359,45 @@ function renderSettingsState() {
   if (profileNameInput.value !== profileName) {
     profileNameInput.value = profileName;
   }
+  notificationsTitle.textContent = activeLang === "ru" ? "Уведомления" : "Notifications";
+  reminderTimeInput.value = notificationSettings.reminderTime;
+
+  if (!notificationsSupported()) {
+    notificationsStatus.textContent =
+      activeLang === "ru"
+        ? "Этот браузер не поддерживает уведомления."
+        : "This browser does not support notifications.";
+    notificationsEnable.textContent = activeLang === "ru" ? "Недоступно" : "Unavailable";
+    notificationsEnable.disabled = true;
+    notificationsTest.disabled = true;
+    return;
+  }
+
+  const permission = notificationPermission();
+  notificationsEnable.disabled = permission === "denied";
+  notificationsTest.disabled = permission !== "granted";
+  notificationsEnable.textContent =
+    permission === "granted"
+      ? activeLang === "ru"
+        ? "Разрешено"
+        : "Allowed"
+      : permission === "denied"
+        ? activeLang === "ru"
+          ? "Запрещено"
+          : "Blocked"
+        : activeLang === "ru"
+          ? "Разрешить"
+          : "Allow";
+
+  notificationsTest.textContent = activeLang === "ru" ? "Тест" : "Test";
+  notificationsStatus.textContent =
+    permission === "granted"
+      ? activeLang === "ru"
+        ? `Ежедневное напоминание в ${notificationSettings.reminderTime}, если на сегодня остались задачи.`
+        : `Daily reminder at ${notificationSettings.reminderTime} when there are unfinished tasks for today.`
+      : activeLang === "ru"
+        ? "Можно включить напоминания о задачах на сегодня."
+        : "You can enable reminders for today's tasks.";
 }
 
 function renderHabits() {
@@ -2004,6 +2151,37 @@ profileNameInput.addEventListener("input", () => {
     localStorage.removeItem(PROFILE_NAME_KEY);
   }
   document.querySelector("h1").textContent = activeModule === "home" ? homeTitleText() : copy().appTitle;
+});
+
+notificationsEnable.addEventListener("click", async () => {
+  if (!notificationsSupported() || notificationPermission() === "denied") {
+    renderSettingsState();
+    return;
+  }
+
+  const permission = await Notification.requestPermission();
+  notificationSettings.enabled = permission === "granted";
+  saveNotificationSettings();
+  renderSettingsState();
+  if (permission === "granted") {
+    checkDailyReminder();
+  }
+});
+
+notificationsTest.addEventListener("click", () => {
+  if (notificationPermission() !== "granted") return;
+  showNotification(
+    activeLang === "ru" ? "Уведомления включены" : "Notifications enabled",
+    activeLang === "ru" ? "Тестовое напоминание работает." : "Test reminder is working.",
+  );
+});
+
+reminderTimeInput.addEventListener("change", () => {
+  notificationSettings.reminderTime = reminderTimeInput.value || "09:00";
+  notificationSettings.lastReminderDate = "";
+  saveNotificationSettings();
+  renderSettingsState();
+  checkDailyReminder();
 });
 
 moduleCards.forEach((card) => {

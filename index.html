@@ -221,6 +221,16 @@
               <input id="profileNameInput" type="text" placeholder="Твое имя" autocomplete="name" maxlength="32" />
             </section>
 
+            <section class="settings-group" aria-labelledby="notificationsTitle">
+              <h3 id="notificationsTitle">Уведомления</h3>
+              <p class="settings-note" id="notificationsStatus">Можно включить напоминания о задачах на сегодня.</p>
+              <div class="segmented">
+                <button class="quiet-button" id="notificationsEnable" type="button">Разрешить</button>
+                <button class="quiet-button" id="notificationsTest" type="button">Тест</button>
+              </div>
+              <input id="reminderTimeInput" type="time" value="09:00" />
+            </section>
+
             <section class="settings-group" aria-labelledby="cleanupTitle">
               <h3 id="cleanupTitle">Очистка</h3>
               <button class="quiet-button danger-button" id="clearDone" type="button">
