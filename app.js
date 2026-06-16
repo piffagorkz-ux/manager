@@ -8,6 +8,7 @@ const QUOTE_OFFSET_KEY = "manager-quote-offset";
 const FORCE_AUTH_KEY = "manager-force-auth";
 const WISH_CLOUD_POSITION_KEY = "manager-wish-cloud-position";
 const PROFILE_NAME_KEY = "manager-profile-name";
+const GOAL_SECTIONS_KEY = "manager-goal-sections";
 
 const PLAN_KEYS = ["today", "tomorrow", "week", "month", "year"];
 const PLANS = Object.fromEntries(PLAN_KEYS.map((plan) => [plan, true]));
@@ -317,6 +318,14 @@ const goalLists = {
   three: document.querySelector("#goalsThree"),
   five: document.querySelector("#goalsFive"),
 };
+const goalSections = document.querySelectorAll(".goal-section");
+const goalToggles = document.querySelectorAll("[data-goal-toggle]");
+const goalCountNodes = {
+  month: document.querySelector("#goalsMonthCount"),
+  year: document.querySelector("#goalsYearCount"),
+  three: document.querySelector("#goalsThreeCount"),
+  five: document.querySelector("#goalsFiveCount"),
+};
 
 let activeModule = "home";
 let activePlan = "today";
@@ -333,6 +342,7 @@ let profileName = localStorage.getItem(PROFILE_NAME_KEY)?.trim() || "";
 let wishCloudPosition = loadWishCloudPosition();
 let wishCloudDrag = null;
 let wishCloudSuppressClickUntil = 0;
+let goalSectionsOpen = loadGoalSectionsState();
 
 init();
 
@@ -388,6 +398,28 @@ function loadWishCloudPosition() {
   }
 
   return null;
+}
+
+function loadGoalSectionsState() {
+  const fallback = { month: true, year: false, three: false, five: false };
+  const saved = localStorage.getItem(GOAL_SECTIONS_KEY);
+  if (!saved) return fallback;
+
+  try {
+    const value = JSON.parse(saved);
+    return {
+      month: value?.month !== false,
+      year: Boolean(value?.year),
+      three: Boolean(value?.three),
+      five: Boolean(value?.five),
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function saveGoalSectionsState() {
+  localStorage.setItem(GOAL_SECTIONS_KEY, JSON.stringify(goalSectionsOpen));
 }
 
 function clampWishCloudPosition(x, y) {
@@ -1012,9 +1044,24 @@ function renderMoneyList(container, items, group) {
 }
 
 function renderGoals() {
+  goalSections.forEach((section) => {
+    const horizon = section.dataset.goalHorizon;
+    const isOpen = Boolean(goalSectionsOpen[horizon]);
+    section.classList.toggle("is-collapsed", !isOpen);
+
+    const toggle = section.querySelector("[data-goal-toggle]");
+    if (toggle) {
+      toggle.setAttribute("aria-expanded", String(isOpen));
+    }
+  });
+
   Object.entries(goalLists).forEach(([horizon, container]) => {
     container.innerHTML = "";
     const goals = (state.goals || []).filter((goal) => goal.horizon === horizon);
+    if (goalCountNodes[horizon]) {
+      goalCountNodes[horizon].textContent = String(goals.length);
+    }
+
     if (!goals.length) {
       const empty = document.createElement("p");
       empty.className = "simple-empty";
@@ -1762,6 +1809,16 @@ goalForm.addEventListener("submit", (event) => {
   event.preventDefault();
   addGoal(document.querySelector("#goalTitle").value, document.querySelector("#goalHorizon").value);
   goalForm.reset();
+});
+
+goalToggles.forEach((button) => {
+  button.addEventListener("click", () => {
+    const horizon = button.dataset.goalToggle;
+    goalSectionsOpen[horizon] = !goalSectionsOpen[horizon];
+    saveGoalSectionsState();
+    renderGoals();
+    button.blur();
+  });
 });
 
 wishForm.addEventListener("submit", (event) => {

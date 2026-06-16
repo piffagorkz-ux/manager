@@ -335,20 +335,32 @@
                 </button>
               </form>
               <div class="goal-columns">
-                <section>
-                  <h3>Месяц</h3>
+                <section class="goal-section" data-goal-horizon="month">
+                  <button class="goal-section-toggle" type="button" data-goal-toggle="month" aria-expanded="true">
+                    <span>Месяц</span>
+                    <strong id="goalsMonthCount">0</strong>
+                  </button>
                   <div id="goalsMonth" class="simple-list"></div>
                 </section>
-                <section>
-                  <h3>Год</h3>
+                <section class="goal-section" data-goal-horizon="year">
+                  <button class="goal-section-toggle" type="button" data-goal-toggle="year" aria-expanded="false">
+                    <span>Год</span>
+                    <strong id="goalsYearCount">0</strong>
+                  </button>
                   <div id="goalsYear" class="simple-list"></div>
                 </section>
-                <section>
-                  <h3>3 года</h3>
+                <section class="goal-section" data-goal-horizon="three">
+                  <button class="goal-section-toggle" type="button" data-goal-toggle="three" aria-expanded="false">
+                    <span>3 года</span>
+                    <strong id="goalsThreeCount">0</strong>
+                  </button>
                   <div id="goalsThree" class="simple-list"></div>
                 </section>
-                <section>
-                  <h3>5 лет</h3>
+                <section class="goal-section" data-goal-horizon="five">
+                  <button class="goal-section-toggle" type="button" data-goal-toggle="five" aria-expanded="false">
+                    <span>5 лет</span>
+                    <strong id="goalsFiveCount">0</strong>
+                  </button>
                   <div id="goalsFive" class="simple-list"></div>
                 </section>
               </div>

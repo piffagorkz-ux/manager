@@ -824,6 +824,43 @@ select {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.goal-section {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.goal-section-toggle {
+  min-height: 52px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel) 82%, transparent);
+  color: var(--ink);
+  padding: 0 14px;
+  text-align: left;
+  font-weight: 800;
+}
+
+.goal-section-toggle strong {
+  min-width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 18%, var(--panel));
+  color: var(--ink);
+  font-size: 0.84rem;
+}
+
+.goal-section.is-collapsed .simple-list {
+  display: none;
+}
+
 .mini-form,
 .goal-form {
   display: grid;
