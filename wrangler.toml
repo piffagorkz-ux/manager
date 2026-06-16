@@ -1,5 +1,9 @@
 name = "manager"
+main = "./worker.js"
 compatibility_date = "2026-06-09"
+
+[triggers]
+crons = ["*/5 * * * *"]
 
 [assets]
 directory = "./dist"

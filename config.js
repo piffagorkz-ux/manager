@@ -1,4 +1,5 @@
 window.APP_CONFIG = {
   "SUPABASE_URL": "",
-  "SUPABASE_ANON_KEY": ""
+  "SUPABASE_ANON_KEY": "",
+  "VAPID_PUBLIC_KEY": ""
 };

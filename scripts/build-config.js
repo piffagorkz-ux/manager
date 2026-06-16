@@ -6,12 +6,13 @@ const dist = path.join(root, "dist");
 const config = {
   SUPABASE_URL: process.env.SUPABASE_URL || "",
   SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || "",
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || "",
 };
 
 fs.rmSync(dist, { recursive: true, force: true });
 fs.mkdirSync(dist, { recursive: true });
 
-for (const file of ["index.html", "styles.css", "app.js", "manifest.webmanifest"]) {
+for (const file of ["index.html", "styles.css", "app.js", "manifest.webmanifest", "sw.js"]) {
   fs.copyFileSync(path.join(root, file), path.join(dist, file));
 }
 

@@ -372,17 +372,26 @@ async function init() {
   if (!db || currentUser) await rollTomorrowIntoToday();
   render();
   applyWishCloudPosition();
-  startReminderWatcher();
-  checkDailyReminder();
+  if (pushSupported()) {
+    registerPushWorker().catch(() => {});
+    if (notificationPermission() === "granted" && notificationSettings.enabled && vapidKey()) {
+      enablePushNotifications().catch(() => {});
+    }
+  } else {
+    startReminderWatcher();
+    checkDailyReminder();
+  }
 
   if (typeof document.addEventListener === "function") {
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) checkDailyReminder();
+      if (!document.hidden && !pushSupported()) checkDailyReminder();
     });
   }
 
   if (typeof window.addEventListener === "function") {
-    window.addEventListener("focus", checkDailyReminder);
+    window.addEventListener("focus", () => {
+      if (!pushSupported()) checkDailyReminder();
+    });
   }
 }
 
@@ -471,8 +480,128 @@ function notificationsSupported() {
   return typeof window !== "undefined" && "Notification" in window;
 }
 
+function pushSupported() {
+  return typeof navigator !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
+}
+
 function notificationPermission() {
   return notificationsSupported() ? Notification.permission : "denied";
+}
+
+async function registerPushWorker() {
+  if (!pushSupported()) return null;
+  return navigator.serviceWorker.register("/sw.js");
+}
+
+function vapidKey() {
+  return window.APP_CONFIG?.VAPID_PUBLIC_KEY || "";
+}
+
+function urlBase64ToUint8Array(value) {
+  const padding = "=".repeat((4 - (value.length % 4 || 4)) % 4);
+  const base64 = `${value}${padding}`.replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  return Uint8Array.from(raw, (char) => char.charCodeAt(0));
+}
+
+async function authHeaders() {
+  if (!db) return null;
+  const { data } = await db.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) return null;
+
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
+}
+
+async function currentPushSubscription() {
+  if (!pushSupported()) return null;
+  const registration = await navigator.serviceWorker.ready;
+  return registration.pushManager.getSubscription();
+}
+
+async function pushSyncSubscription(subscription, enabled = notificationSettings.enabled) {
+  const headers = await authHeaders();
+  if (!headers) return false;
+
+  const response = await fetch("/api/push/subscribe", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      subscription: subscription.toJSON ? subscription.toJSON() : subscription,
+      enabled,
+      reminderTime: notificationSettings.reminderTime,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+    }),
+  });
+
+  return response.ok;
+}
+
+async function unsubscribePushOnServer(subscription) {
+  const headers = await authHeaders();
+  if (!headers || !subscription?.endpoint) return false;
+
+  const response = await fetch("/api/push/unsubscribe", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      endpoint: subscription.endpoint,
+    }),
+  });
+
+  return response.ok;
+}
+
+async function enablePushNotifications() {
+  if (!pushSupported() || !notificationsSupported()) return false;
+  if (!vapidKey()) return false;
+
+  const permission = notificationPermission() === "granted" ? "granted" : await Notification.requestPermission();
+  if (permission !== "granted") return false;
+
+  await registerPushWorker();
+  const registration = await navigator.serviceWorker.ready;
+  let subscription = await registration.pushManager.getSubscription();
+
+  if (!subscription) {
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidKey()),
+    });
+  }
+
+  const synced = await pushSyncSubscription(subscription, true);
+  if (!synced) return false;
+
+  notificationSettings.enabled = true;
+  saveNotificationSettings();
+  return true;
+}
+
+async function disablePushNotifications() {
+  const subscription = await currentPushSubscription();
+  if (subscription) {
+    await unsubscribePushOnServer(subscription);
+    await subscription.unsubscribe();
+  }
+
+  notificationSettings.enabled = false;
+  saveNotificationSettings();
+}
+
+async function sendPushTest() {
+  const headers = await authHeaders();
+  if (!headers) return false;
+
+  const response = await fetch("/api/push/test", {
+    method: "POST",
+    headers,
+  });
+
+  return response.ok;
 }
 
 function todayTaskCount() {
@@ -509,6 +638,7 @@ function reminderBody(count) {
 }
 
 function checkDailyReminder() {
+  if (pushSupported()) return;
   if (!notificationSettings.enabled) return;
   if (notificationPermission() !== "granted") return;
   if (!reminderTimeReached()) return;
@@ -1373,14 +1503,29 @@ function renderSettingsState() {
     return;
   }
 
+  if (pushSupported() && !vapidKey()) {
+    notificationsStatus.textContent =
+      activeLang === "ru"
+        ? "Push еще не настроен на сервере. Нужен публичный VAPID ключ."
+        : "Push is not configured on the server yet. A public VAPID key is required.";
+    notificationsEnable.textContent = activeLang === "ru" ? "Не настроено" : "Not configured";
+    notificationsEnable.disabled = true;
+    notificationsTest.disabled = true;
+    return;
+  }
+
   const permission = notificationPermission();
   notificationsEnable.disabled = permission === "denied";
-  notificationsTest.disabled = permission !== "granted";
+  notificationsTest.disabled = permission !== "granted" || !notificationSettings.enabled;
   notificationsEnable.textContent =
     permission === "granted"
-      ? activeLang === "ru"
-        ? "Разрешено"
-        : "Allowed"
+      ? notificationSettings.enabled
+        ? activeLang === "ru"
+          ? "Выключить"
+          : "Disable"
+        : activeLang === "ru"
+          ? "Включить"
+          : "Enable"
       : permission === "denied"
         ? activeLang === "ru"
           ? "Запрещено"
@@ -1392,9 +1537,17 @@ function renderSettingsState() {
   notificationsTest.textContent = activeLang === "ru" ? "Тест" : "Test";
   notificationsStatus.textContent =
     permission === "granted"
-      ? activeLang === "ru"
-        ? `Ежедневное напоминание в ${notificationSettings.reminderTime}, если на сегодня остались задачи.`
-        : `Daily reminder at ${notificationSettings.reminderTime} when there are unfinished tasks for today.`
+      ? pushSupported()
+        ? notificationSettings.enabled
+          ? activeLang === "ru"
+            ? `Push-напоминание в ${notificationSettings.reminderTime}, даже когда приложение закрыто.`
+            : `Push reminder at ${notificationSettings.reminderTime}, even when the app is closed.`
+          : activeLang === "ru"
+            ? "Разрешение получено. Можно включить push-напоминания."
+            : "Permission granted. You can enable push reminders."
+        : activeLang === "ru"
+          ? `Ежедневное напоминание в ${notificationSettings.reminderTime}, если приложение открыто.`
+          : `Daily reminder at ${notificationSettings.reminderTime} when the app is open.`
       : activeLang === "ru"
         ? "Можно включить напоминания о задачах на сегодня."
         : "You can enable reminders for today's tasks.";
@@ -2159,27 +2312,45 @@ notificationsEnable.addEventListener("click", async () => {
     return;
   }
 
+  if (pushSupported()) {
+    if (notificationSettings.enabled && notificationPermission() === "granted") {
+      await disablePushNotifications();
+    } else {
+      await enablePushNotifications();
+    }
+    renderSettingsState();
+    return;
+  }
+
   const permission = await Notification.requestPermission();
   notificationSettings.enabled = permission === "granted";
   saveNotificationSettings();
   renderSettingsState();
-  if (permission === "granted") {
-    checkDailyReminder();
-  }
+  if (permission === "granted") checkDailyReminder();
 });
 
-notificationsTest.addEventListener("click", () => {
+notificationsTest.addEventListener("click", async () => {
   if (notificationPermission() !== "granted") return;
+  if (pushSupported() && notificationSettings.enabled) {
+    await sendPushTest();
+    return;
+  }
   showNotification(
     activeLang === "ru" ? "Уведомления включены" : "Notifications enabled",
     activeLang === "ru" ? "Тестовое напоминание работает." : "Test reminder is working.",
   );
 });
 
-reminderTimeInput.addEventListener("change", () => {
+reminderTimeInput.addEventListener("change", async () => {
   notificationSettings.reminderTime = reminderTimeInput.value || "09:00";
   notificationSettings.lastReminderDate = "";
   saveNotificationSettings();
+  if (pushSupported() && notificationPermission() === "granted" && notificationSettings.enabled) {
+    const subscription = await currentPushSubscription();
+    if (subscription) {
+      await pushSyncSubscription(subscription, true);
+    }
+  }
   renderSettingsState();
   checkDailyReminder();
 });

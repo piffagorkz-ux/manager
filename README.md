@@ -30,6 +30,19 @@ Environment variables:
 
 - `SUPABASE_URL`
 - `SUPABASE_ANON_KEY`
+- `VAPID_PUBLIC_KEY`
+
+For background push notifications also add Worker secrets/vars in Cloudflare:
+
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `VAPID_PRIVATE_KEY`
+- `VAPID_SUBJECT`
+
+Generate VAPID keys locally:
+
+```bash
+node scripts/generate-vapid-keys.js
+```
 
 Если Cloudflare деплоит проект как Worker, `wrangler.toml` уже указывает assets directory `./dist`.
 

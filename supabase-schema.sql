@@ -41,6 +41,19 @@ create table if not exists public.module_state (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.push_subscriptions (
+  endpoint text primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  p256dh text not null,
+  auth text not null,
+  reminder_time text not null default '09:00' check (reminder_time ~ '^\d{2}:\d{2}$'),
+  timezone text not null default 'UTC',
+  enabled boolean not null default true,
+  last_notified_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.set_updated_at()
 returns trigger
 language plpgsql
@@ -63,10 +76,17 @@ before update on public.habits
 for each row
 execute function public.set_updated_at();
 
+drop trigger if exists push_subscriptions_set_updated_at on public.push_subscriptions;
+create trigger push_subscriptions_set_updated_at
+before update on public.push_subscriptions
+for each row
+execute function public.set_updated_at();
+
 alter table public.tasks enable row level security;
 alter table public.habits enable row level security;
 alter table public.habit_checks enable row level security;
 alter table public.module_state enable row level security;
+alter table public.push_subscriptions enable row level security;
 
 drop policy if exists "Public read tasks" on public.tasks;
 drop policy if exists "Users read own tasks" on public.tasks;
@@ -165,3 +185,9 @@ on public.module_state for update
 to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
+
+drop policy if exists "Users read own push subscriptions" on public.push_subscriptions;
+create policy "Users read own push subscriptions"
+on public.push_subscriptions for select
+to authenticated
+using (auth.uid() = user_id);
