@@ -286,10 +286,20 @@
                   <strong>Дополнительный минус</strong>
                   <input id="quickExpenseAmount" type="number" inputmode="decimal" placeholder="- Сумма" required />
                   <select id="quickExpenseCategory" required>
-                    <option value="Бензин">Бензин</option>
                     <option value="Еда">Еда</option>
-                    <option value="Вкусняшки">Вкусняшки</option>
+                    <option value="Дом">Дом</option>
+                    <option value="Отдых">Отдых</option>
+                    <option value="Развлечения">Развлечения</option>
                     <option value="Одежда">Одежда</option>
+                    <option value="Здоровье">Здоровье</option>
+                    <option value="На авто">На авто</option>
+                    <option value="Косметика">Косметика</option>
+                    <option value="Коммунальные">Коммунальные</option>
+                    <option value="Связь">Связь</option>
+                    <option value="Подписки">Подписки</option>
+                    <option value="Образование">Образование</option>
+                    <option value="Подарки">Подарки</option>
+                    <option value="Кредиты">Кредиты</option>
                     <option value="Иное">Иное</option>
                   </select>
                   <input id="quickExpenseNote" type="text" placeholder="Комментарий" autocomplete="off" />
@@ -297,25 +307,18 @@
                 </form>
               </div>
               <section class="finance-analytics" aria-label="Аналитика расходов">
-                <div class="finance-donut" id="financeDonut">
-                  <span id="financeDonutTotal">0</span>
+                <div class="finance-chart-head">
+                  <strong>Расходы по категориям</strong>
+                  <small id="financeChartTotal">0</small>
                 </div>
-                <div class="finance-legend">
-                  <div>
-                    <span class="legend-dot recurring"></span>
-                    <strong>Постоянные</strong>
-                    <small id="recurringExpenseValue">0</small>
-                  </div>
-                  <div>
-                    <span class="legend-dot extra"></span>
-                    <strong>Траты</strong>
-                    <small id="extraExpenseValue">0</small>
-                  </div>
-                </div>
+                <div id="financeCategoryChart" class="finance-category-chart"></div>
               </section>
               <div class="finance-lists">
                 <section>
-                  <h3>Выписка</h3>
+                  <div class="finance-list-head">
+                    <h3>Выписка</h3>
+                    <button class="quiet-button" id="exportFinanceButton" type="button">Excel</button>
+                  </div>
                   <div id="extraMoneyList" class="simple-list statement-list"></div>
                 </section>
               </div>

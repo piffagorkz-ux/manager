@@ -307,14 +307,13 @@ const financeSummary = document.querySelector("#financeSummary");
 const monthlyIncomeList = document.querySelector("#monthlyIncomeList");
 const monthlyExpenseList = document.querySelector("#monthlyExpenseList");
 const extraMoneyList = document.querySelector("#extraMoneyList");
-const financeDonut = document.querySelector("#financeDonut");
-const financeDonutTotal = document.querySelector("#financeDonutTotal");
-const recurringExpenseValue = document.querySelector("#recurringExpenseValue");
-const extraExpenseValue = document.querySelector("#extraExpenseValue");
+const financeCategoryChart = document.querySelector("#financeCategoryChart");
+const financeChartTotal = document.querySelector("#financeChartTotal");
 const monthlyIncomeForm = document.querySelector("#monthlyIncomeForm");
 const monthlyExpenseForm = document.querySelector("#monthlyExpenseForm");
 const quickIncomeForm = document.querySelector("#quickIncomeForm");
 const quickExpenseForm = document.querySelector("#quickExpenseForm");
+const exportFinanceButton = document.querySelector("#exportFinanceButton");
 const financeFormButtons = document.querySelectorAll("[data-finance-form]");
 const financeEntryForms = document.querySelectorAll(".finance-entry-form");
 const goalForm = document.querySelector("#goalForm");
@@ -903,6 +902,7 @@ function normalizeMoneyItem(item) {
     type: item.type === "expense" ? "expense" : "income",
     category: item.category || "",
     createdAt: item.createdAt || Date.now(),
+    updatedAt: item.updatedAt || item.createdAt || Date.now(),
   };
 }
 
@@ -1234,21 +1234,16 @@ function renderFinance() {
   const extraExpense = sumMoney(finance.extra, "expense");
   const balance = monthlyIncome + extraIncome - monthlyExpense - extraExpense;
   const totalExpense = monthlyExpense + extraExpense;
-  const recurringShare = totalExpense ? Math.round((monthlyExpense / totalExpense) * 100) : 0;
 
   financeSummary.textContent = `Баланс месяца: ${formatMoney(balance)} · доходы ${formatMoney(monthlyIncome + extraIncome)} · расходы ${formatMoney(monthlyExpense + extraExpense)}`;
-  if (financeDonut.style?.setProperty) {
-    financeDonut.style.setProperty("--recurring-share", `${recurringShare}%`);
-  }
-  financeDonutTotal.textContent = formatMoney(totalExpense);
-  recurringExpenseValue.textContent = formatMoney(monthlyExpense);
-  extraExpenseValue.textContent = formatMoney(extraExpense);
-  renderMoneyList(monthlyIncomeList, finance.monthly.filter((item) => item.type === "income"), "monthly");
-  renderMoneyList(monthlyExpenseList, finance.monthly.filter((item) => item.type === "expense"), "monthly");
-  renderMoneyList(extraMoneyList, finance.extra, "extra");
+  financeChartTotal.textContent = `Всего расходов: ${formatMoney(totalExpense)}`;
+  renderFinanceCategoryChart(finance);
+  renderMoneyList(monthlyIncomeList, finance.monthly.filter((item) => item.type === "income"), "monthly", { editable: true, showDate: true });
+  renderMoneyList(monthlyExpenseList, finance.monthly.filter((item) => item.type === "expense"), "monthly", { editable: true, showDate: true });
+  renderMoneyList(extraMoneyList, finance.extra, "extra", { showDate: true });
 }
 
-function renderMoneyList(container, items, group) {
+function renderMoneyList(container, items, group, options = {}) {
   container.innerHTML = "";
   if (!items.length) {
     const empty = document.createElement("p");
@@ -1264,20 +1259,92 @@ function renderMoneyList(container, items, group) {
     .forEach((item) => {
       const row = document.createElement("div");
       row.className = `simple-row ${item.type}`;
+      if (options.editable) row.classList.add("has-edit");
+      if (options.showDate || item.type === "expense") row.classList.add("has-meta");
+
+      const content = document.createElement("div");
+      content.className = "money-row-content";
 
       const title = document.createElement("span");
       title.textContent = item.category ? `${item.title} · ${item.category}` : item.title;
+      content.append(title);
+
+      if (options.showDate || item.type === "expense") {
+        const meta = document.createElement("small");
+        meta.textContent = options.showDate
+          ? `${formatShortDate(item.createdAt)} · ${formatMonthNameFromDate(item.createdAt)}`
+          : formatShortDate(item.createdAt);
+        content.append(meta);
+      }
 
       const amount = document.createElement("strong");
       amount.textContent = `${item.type === "income" ? "+" : "-"}${formatMoney(item.amount)}`;
+
+      if (options.editable) {
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.textContent = "✎";
+        edit.addEventListener("click", () => editMoneyItem(group, item.id));
+        row.append(content, amount, edit);
+      } else {
+        row.append(content, amount);
+      }
 
       const remove = document.createElement("button");
       remove.type = "button";
       remove.textContent = "x";
       remove.addEventListener("click", () => deleteMoneyItem(group, item.id));
 
-      row.append(title, amount, remove);
+      row.append(remove);
       container.append(row);
+    });
+}
+
+function renderFinanceCategoryChart(finance) {
+  financeCategoryChart.innerHTML = "";
+
+  const items = [...finance.monthly, ...finance.extra].filter((item) => item.type === "expense");
+  const total = items.reduce((sum, item) => sum + item.amount, 0);
+
+  if (!total) {
+    const empty = document.createElement("p");
+    empty.className = "simple-empty";
+    empty.textContent = "Категории расходов появятся после первых трат.";
+    financeCategoryChart.append(empty);
+    return;
+  }
+
+  const categoryMap = new Map();
+  items.forEach((item) => {
+    const label = item.category || item.title || "Иное";
+    categoryMap.set(label, (categoryMap.get(label) || 0) + item.amount);
+  });
+
+  [...categoryMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([label, amount]) => {
+      const share = Math.round((amount / total) * 100);
+      const row = document.createElement("div");
+      row.className = "finance-category-row";
+
+      const head = document.createElement("div");
+      head.className = "finance-category-head";
+
+      const title = document.createElement("strong");
+      title.textContent = label;
+      const value = document.createElement("small");
+      value.textContent = `${share}% · ${formatMoney(amount)}`;
+      head.append(title, value);
+
+      const bar = document.createElement("div");
+      bar.className = "finance-category-bar";
+
+      const fill = document.createElement("span");
+      fill.style.width = `${Math.max(share, 6)}%`;
+      bar.append(fill);
+
+      row.append(head, bar);
+      financeCategoryChart.append(row);
     });
 }
 
@@ -1403,6 +1470,20 @@ function formatShortDate(value) {
   }).format(new Date(value));
 }
 
+function formatMonthNameFromDate(value) {
+  const date = new Date(value);
+  return new Intl.DateTimeFormat(activeLang === "ru" ? "ru-RU" : "en-US", {
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
+function sameMonth(value, reference = Date.now()) {
+  const date = new Date(value);
+  const current = new Date(reference);
+  return date.getFullYear() === current.getFullYear() && date.getMonth() === current.getMonth();
+}
+
 function formatDuration(start, end) {
   let startDate = new Date(start);
   const endDate = new Date(end);
@@ -1439,6 +1520,38 @@ function formatMoney(value) {
   return new Intl.NumberFormat(activeLang === "ru" ? "ru-RU" : "en-US", {
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+function exportFinanceStatement() {
+  const finance = state.finance || createEmptyFinance();
+  const rows = [...finance.monthly, ...finance.extra]
+    .filter((item) => sameMonth(item.createdAt))
+    .sort((a, b) => a.createdAt - b.createdAt);
+
+  if (!rows.length) return;
+
+  const header = ["Дата", "Месяц", "Тип", "Категория", "Название", "Сумма"];
+  const data = rows.map((item) => [
+    new Date(item.createdAt).toLocaleDateString(activeLang === "ru" ? "ru-RU" : "en-US"),
+    formatMonthNameFromDate(item.createdAt),
+    item.type === "income" ? "Доход" : "Расход",
+    item.category || "",
+    item.title,
+    String(item.amount),
+  ]);
+
+  const csv = [header, ...data]
+    .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(";"))
+    .join("\r\n");
+
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const monthLabel = formatMonthNameFromDate(Date.now()).replace(/\s+/g, "-");
+  link.href = url;
+  link.download = `finance-${monthLabel}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 function homeTitleText() {
@@ -1930,6 +2043,7 @@ function addMoneyItem(group, type, title, amount, category = "") {
     type,
     category: type === "expense" ? category : "",
     createdAt: Date.now(),
+    updatedAt: Date.now(),
   });
   saveModuleState();
   render();
@@ -1938,6 +2052,35 @@ function addMoneyItem(group, type, title, amount, category = "") {
 function deleteMoneyItem(group, id) {
   if (!state.finance) return;
   state.finance[group] = state.finance[group].filter((item) => item.id !== id);
+  saveModuleState();
+  render();
+}
+
+function editMoneyItem(group, id) {
+  if (!state.finance) return;
+  const item = state.finance[group].find((entry) => entry.id === id);
+  if (!item) return;
+
+  const nextTitle = prompt("Название", item.title);
+  if (nextTitle === null) return;
+
+  const nextAmount = prompt("Сумма", String(item.amount));
+  if (nextAmount === null) return;
+
+  const amount = Number(nextAmount);
+  if (!Number.isFinite(amount) || amount <= 0) return;
+
+  state.finance[group] = state.finance[group].map((entry) =>
+    entry.id === id
+      ? {
+          ...entry,
+          title: nextTitle.trim() || entry.title,
+          amount,
+          updatedAt: Date.now(),
+        }
+      : entry,
+  );
+
   saveModuleState();
   render();
 }
@@ -2103,6 +2246,11 @@ quickExpenseForm.addEventListener("submit", (event) => {
   );
   quickExpenseForm.reset();
   quickExpenseForm.hidden = true;
+});
+
+exportFinanceButton.addEventListener("click", () => {
+  exportFinanceStatement();
+  exportFinanceButton.blur();
 });
 
 goalForm.addEventListener("submit", (event) => {

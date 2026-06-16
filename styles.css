@@ -931,67 +931,65 @@ select {
 
 .finance-analytics {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 16px;
+  gap: 14px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: color-mix(in srgb, var(--panel) 88%, var(--bg));
   padding: 14px;
 }
 
-.finance-donut {
-  --recurring-share: 0%;
-  width: 132px;
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at center, var(--panel) 0 54%, transparent 55%),
-    conic-gradient(
-      color-mix(in srgb, var(--accent) 78%, var(--ink)) 0 var(--recurring-share),
-      color-mix(in srgb, #3ba55d 80%, var(--ink)) var(--recurring-share) 100%
-    );
+.finance-chart-head,
+.finance-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.finance-donut span {
-  max-width: 76px;
-  color: var(--ink);
-  font-size: 0.95rem;
-  font-weight: 900;
-  text-align: center;
+.finance-chart-head strong,
+.finance-list-head h3 {
+  margin: 0;
 }
 
-.finance-legend {
+.finance-chart-head small {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.finance-category-chart {
   display: grid;
   gap: 10px;
 }
 
-.finance-legend div {
+.finance-category-row {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 7px;
+}
+
+.finance-category-head {
+  display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-.finance-legend small {
+.finance-category-head small {
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 700;
 }
 
-.legend-dot {
-  width: 12px;
-  height: 12px;
+.finance-category-bar {
+  height: 10px;
   border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 74%, var(--bg));
+  overflow: hidden;
 }
 
-.legend-dot.recurring {
-  background: color-mix(in srgb, var(--accent) 78%, var(--ink));
-}
-
-.legend-dot.extra {
-  background: color-mix(in srgb, #3ba55d 80%, var(--ink));
+.finance-category-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 86%, #ffffff), color-mix(in srgb, var(--accent) 64%, #ffb36b));
 }
 
 .compact-list {
@@ -1030,8 +1028,23 @@ select {
   padding: 8px 10px;
 }
 
+.simple-row.has-edit {
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+
 .simple-row span {
   overflow-wrap: anywhere;
+}
+
+.money-row-content {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.money-row-content small {
+  color: var(--muted);
+  font-size: 0.8rem;
 }
 
 .simple-row.income strong {
