@@ -256,36 +256,25 @@
             </div>
             <div class="finance-panel">
               <div class="finance-icon-actions">
-                <button class="finance-icon-button income" type="button" data-finance-form="monthlyIncomeForm" aria-label="Постоянный доход">↗</button>
-                <button class="finance-icon-button expense" type="button" data-finance-form="monthlyExpenseForm" aria-label="Постоянный расход">↘</button>
-                <button class="finance-icon-button income" type="button" data-finance-form="quickIncomeForm" aria-label="Дополнительный доход">+</button>
-                <button class="finance-icon-button expense" type="button" data-finance-form="quickExpenseForm" aria-label="Дополнительный расход">−</button>
+                <button class="finance-icon-button income" type="button" data-finance-form="incomeForm" aria-label="Доход">+</button>
+                <button class="finance-icon-button expense" type="button" data-finance-form="expenseForm" aria-label="Расход">−</button>
               </div>
               <div class="finance-form-stack">
-                <form class="mini-form finance-entry-form" id="monthlyIncomeForm" hidden>
-                  <strong>Постоянный доход</strong>
-                  <input id="monthlyIncomeTitle" type="text" placeholder="Название" autocomplete="off" required />
-                  <input id="monthlyIncomeAmount" type="number" inputmode="decimal" placeholder="Сумма" required />
+                <form class="mini-form finance-entry-form" id="incomeForm" hidden>
+                  <strong>Доход</strong>
+                  <input id="incomeTitle" type="text" placeholder="Название" autocomplete="off" required />
+                  <input id="incomeAmount" type="number" inputmode="decimal" placeholder="Сумма" required />
+                  <label class="check-field">
+                    <input id="incomeRecurring" type="checkbox" />
+                    <span>Постоянный</span>
+                  </label>
                   <button class="quiet-button" type="submit">Добавить</button>
                   <div id="monthlyIncomeList" class="simple-list compact-list"></div>
                 </form>
-                <form class="mini-form finance-entry-form" id="monthlyExpenseForm" hidden>
-                  <strong>Постоянный расход</strong>
-                  <input id="monthlyExpenseTitle" type="text" placeholder="Название" autocomplete="off" required />
-                  <input id="monthlyExpenseAmount" type="number" inputmode="decimal" placeholder="Сумма" required />
-                  <button class="quiet-button" type="submit">Добавить</button>
-                  <div id="monthlyExpenseList" class="simple-list compact-list"></div>
-                </form>
-                <form class="mini-form finance-entry-form" id="quickIncomeForm" hidden>
-                  <strong>Дополнительный плюс</strong>
-                  <input id="quickIncomeAmount" type="number" inputmode="decimal" placeholder="+ Сумма" required />
-                  <input id="quickIncomeNote" type="text" placeholder="Комментарий" autocomplete="off" />
-                  <button class="money-button income" type="submit">+</button>
-                </form>
-                <form class="mini-form finance-entry-form" id="quickExpenseForm" hidden>
-                  <strong>Дополнительный минус</strong>
-                  <input id="quickExpenseAmount" type="number" inputmode="decimal" placeholder="- Сумма" required />
-                  <select id="quickExpenseCategory" required>
+                <form class="mini-form finance-entry-form" id="expenseForm" hidden>
+                  <strong>Расход</strong>
+                  <input id="expenseAmount" type="number" inputmode="decimal" placeholder="Сумма" required />
+                  <select id="expenseCategory" required>
                     <option value="Еда">Еда</option>
                     <option value="Дом">Дом</option>
                     <option value="Отдых">Отдых</option>
@@ -302,8 +291,13 @@
                     <option value="Кредиты">Кредиты</option>
                     <option value="Иное">Иное</option>
                   </select>
-                  <input id="quickExpenseNote" type="text" placeholder="Комментарий" autocomplete="off" />
-                  <button class="money-button expense" type="submit">−</button>
+                  <input id="expenseNote" type="text" placeholder="Комментарий" autocomplete="off" />
+                  <label class="check-field">
+                    <input id="expenseRecurring" type="checkbox" />
+                    <span>Постоянный</span>
+                  </label>
+                  <button class="quiet-button" type="submit">Добавить</button>
+                  <div id="monthlyExpenseList" class="simple-list compact-list"></div>
                 </form>
               </div>
               <section class="finance-analytics" aria-label="Аналитика расходов">

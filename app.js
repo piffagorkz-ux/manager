@@ -309,10 +309,8 @@ const monthlyExpenseList = document.querySelector("#monthlyExpenseList");
 const extraMoneyList = document.querySelector("#extraMoneyList");
 const financeCategoryChart = document.querySelector("#financeCategoryChart");
 const financeChartTotal = document.querySelector("#financeChartTotal");
-const monthlyIncomeForm = document.querySelector("#monthlyIncomeForm");
-const monthlyExpenseForm = document.querySelector("#monthlyExpenseForm");
-const quickIncomeForm = document.querySelector("#quickIncomeForm");
-const quickExpenseForm = document.querySelector("#quickExpenseForm");
+const incomeForm = document.querySelector("#incomeForm");
+const expenseForm = document.querySelector("#expenseForm");
 const exportFinanceButton = document.querySelector("#exportFinanceButton");
 const financeFormButtons = document.querySelectorAll("[data-finance-form]");
 const financeEntryForms = document.querySelectorAll(".finance-entry-form");
@@ -903,6 +901,9 @@ function normalizeMoneyItem(item) {
     category: item.category || "",
     createdAt: item.createdAt || Date.now(),
     updatedAt: item.updatedAt || item.createdAt || Date.now(),
+    recurring: Boolean(item.recurring),
+    recurringId: item.recurringId || "",
+    monthKey: item.monthKey || monthKeyFromDate(item.createdAt || Date.now()),
   };
 }
 
@@ -1227,20 +1228,19 @@ function renderDailyQuote() {
 }
 
 function renderFinance() {
+  ensureRecurringFinanceEntries();
   const finance = state.finance || createEmptyFinance();
-  const monthlyIncome = sumMoney(finance.monthly, "income");
-  const monthlyExpense = sumMoney(finance.monthly, "expense");
-  const extraIncome = sumMoney(finance.extra, "income");
-  const extraExpense = sumMoney(finance.extra, "expense");
-  const balance = monthlyIncome + extraIncome - monthlyExpense - extraExpense;
-  const totalExpense = monthlyExpense + extraExpense;
+  const monthEntries = finance.extra.filter((item) => sameMonth(item.createdAt));
+  const monthIncome = sumMoney(monthEntries, "income");
+  const monthExpense = sumMoney(monthEntries, "expense");
+  const balance = monthIncome - monthExpense;
 
-  financeSummary.textContent = `Баланс месяца: ${formatMoney(balance)} · доходы ${formatMoney(monthlyIncome + extraIncome)} · расходы ${formatMoney(monthlyExpense + extraExpense)}`;
-  financeChartTotal.textContent = `Всего расходов: ${formatMoney(totalExpense)}`;
-  renderFinanceCategoryChart(finance);
-  renderMoneyList(monthlyIncomeList, finance.monthly.filter((item) => item.type === "income"), "monthly", { editable: true, showDate: true });
-  renderMoneyList(monthlyExpenseList, finance.monthly.filter((item) => item.type === "expense"), "monthly", { editable: true, showDate: true });
-  renderMoneyList(extraMoneyList, finance.extra, "extra", { showDate: true });
+  financeSummary.textContent = `Баланс месяца: ${formatMoney(balance)} · доходы ${formatMoney(monthIncome)} · расходы ${formatMoney(monthExpense)}`;
+  financeChartTotal.textContent = `Всего расходов: ${formatMoney(monthExpense)}`;
+  renderFinanceCategoryChart(monthEntries);
+  renderMoneyList(monthlyIncomeList, finance.monthly.filter((item) => item.type === "income"), "monthly", { editable: true, recurringList: true });
+  renderMoneyList(monthlyExpenseList, finance.monthly.filter((item) => item.type === "expense"), "monthly", { editable: true, recurringList: true });
+  renderMoneyList(extraMoneyList, monthEntries, "extra", { showDate: true });
 }
 
 function renderMoneyList(container, items, group, options = {}) {
@@ -1269,7 +1269,11 @@ function renderMoneyList(container, items, group, options = {}) {
       title.textContent = item.category ? `${item.title} · ${item.category}` : item.title;
       content.append(title);
 
-      if (options.showDate || item.type === "expense") {
+      if (options.recurringList) {
+        const meta = document.createElement("small");
+        meta.textContent = "Каждый месяц";
+        content.append(meta);
+      } else if (options.showDate || item.type === "expense") {
         const meta = document.createElement("small");
         meta.textContent = options.showDate
           ? `${formatShortDate(item.createdAt)} · ${formatMonthNameFromDate(item.createdAt)}`
@@ -1300,10 +1304,8 @@ function renderMoneyList(container, items, group, options = {}) {
     });
 }
 
-function renderFinanceCategoryChart(finance) {
+function renderFinanceCategoryChart(items) {
   financeCategoryChart.innerHTML = "";
-
-  const items = [...finance.monthly, ...finance.extra].filter((item) => item.type === "expense");
   const total = items.reduce((sum, item) => sum + item.amount, 0);
 
   if (!total) {
@@ -1478,10 +1480,68 @@ function formatMonthNameFromDate(value) {
   }).format(date);
 }
 
+function monthKeyFromDate(value) {
+  const date = new Date(value);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthStartTimestamp(monthKey) {
+  const [year, month] = monthKey.split("-").map(Number);
+  return new Date(year, month - 1, 1, 9, 0, 0, 0).getTime();
+}
+
 function sameMonth(value, reference = Date.now()) {
   const date = new Date(value);
   const current = new Date(reference);
   return date.getFullYear() === current.getFullYear() && date.getMonth() === current.getMonth();
+}
+
+function monthKeysBetween(startValue, endValue = Date.now()) {
+  const start = new Date(startValue);
+  const end = new Date(endValue);
+  const keys = [];
+  let year = start.getFullYear();
+  let month = start.getMonth();
+
+  while (year < end.getFullYear() || (year === end.getFullYear() && month <= end.getMonth())) {
+    keys.push(`${year}-${String(month + 1).padStart(2, "0")}`);
+    month += 1;
+    if (month > 11) {
+      month = 0;
+      year += 1;
+    }
+  }
+
+  return keys;
+}
+
+function ensureRecurringFinanceEntries() {
+  if (!state.finance) state.finance = createEmptyFinance();
+  let changed = false;
+
+  state.finance.monthly.forEach((template) => {
+    const start = template.createdAt || Date.now();
+    monthKeysBetween(start).forEach((monthKey) => {
+      const exists = state.finance.extra.some((entry) => entry.recurringId === template.id && entry.monthKey === monthKey);
+      if (exists) return;
+
+      state.finance.extra.push({
+        id: crypto.randomUUID(),
+        title: template.title,
+        amount: template.amount,
+        type: template.type,
+        category: template.category,
+        createdAt: monthStartTimestamp(monthKey),
+        updatedAt: Date.now(),
+        recurring: false,
+        recurringId: template.id,
+        monthKey,
+      });
+      changed = true;
+    });
+  });
+
+  if (changed) saveModuleState();
 }
 
 function formatDuration(start, end) {
@@ -1523,8 +1583,9 @@ function formatMoney(value) {
 }
 
 function exportFinanceStatement() {
+  ensureRecurringFinanceEntries();
   const finance = state.finance || createEmptyFinance();
-  const rows = [...finance.monthly, ...finance.extra]
+  const rows = finance.extra
     .filter((item) => sameMonth(item.createdAt))
     .sort((a, b) => a.createdAt - b.createdAt);
 
@@ -2031,12 +2092,12 @@ async function toggleHabitCheck(habitId, date, options = {}) {
   render();
 }
 
-function addMoneyItem(group, type, title, amount, category = "") {
+function addMoneyItem(group, type, title, amount, category = "", recurring = false) {
   const value = Number(amount);
   if (!Number.isFinite(value) || value <= 0) return;
 
   if (!state.finance) state.finance = createEmptyFinance();
-  state.finance[group].push({
+  const item = {
     id: crypto.randomUUID(),
     title: title.trim() || (type === "income" ? "Доход" : "Расход"),
     amount: value,
@@ -2044,14 +2105,32 @@ function addMoneyItem(group, type, title, amount, category = "") {
     category: type === "expense" ? category : "",
     createdAt: Date.now(),
     updatedAt: Date.now(),
-  });
+    recurring: Boolean(recurring),
+    recurringId: "",
+    monthKey: monthKeyFromDate(Date.now()),
+  };
+
+  if (group === "monthly") {
+    state.finance.monthly.push(item);
+    ensureRecurringFinanceEntries();
+  } else {
+    state.finance.extra.push(item);
+  }
+
   saveModuleState();
   render();
 }
 
 function deleteMoneyItem(group, id) {
   if (!state.finance) return;
-  state.finance[group] = state.finance[group].filter((item) => item.id !== id);
+
+  if (group === "monthly") {
+    state.finance.monthly = state.finance.monthly.filter((item) => item.id !== id);
+    state.finance.extra = state.finance.extra.filter((item) => item.recurringId !== id);
+  } else {
+    state.finance.extra = state.finance.extra.filter((item) => item.id !== id);
+  }
+
   saveModuleState();
   render();
 }
@@ -2070,16 +2149,40 @@ function editMoneyItem(group, id) {
   const amount = Number(nextAmount);
   if (!Number.isFinite(amount) || amount <= 0) return;
 
-  state.finance[group] = state.finance[group].map((entry) =>
-    entry.id === id
-      ? {
-          ...entry,
-          title: nextTitle.trim() || entry.title,
-          amount,
-          updatedAt: Date.now(),
-        }
-      : entry,
-  );
+  if (group === "monthly") {
+    state.finance.monthly = state.finance.monthly.map((entry) =>
+      entry.id === id
+        ? {
+            ...entry,
+            title: nextTitle.trim() || entry.title,
+            amount,
+            updatedAt: Date.now(),
+          }
+        : entry,
+    );
+
+    state.finance.extra = state.finance.extra.map((entry) =>
+      entry.recurringId === id
+        ? {
+            ...entry,
+            title: nextTitle.trim() || entry.title,
+            amount,
+            updatedAt: Date.now(),
+          }
+        : entry,
+    );
+  } else {
+    state.finance.extra = state.finance.extra.map((entry) =>
+      entry.id === id
+        ? {
+            ...entry,
+            title: nextTitle.trim() || entry.title,
+            amount,
+            updatedAt: Date.now(),
+          }
+        : entry,
+    );
+  }
 
   saveModuleState();
   render();
@@ -2209,43 +2312,35 @@ financeFormButtons.forEach((button) => {
   });
 });
 
-monthlyIncomeForm.addEventListener("submit", (event) => {
+incomeForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  addMoneyItem("monthly", "income", document.querySelector("#monthlyIncomeTitle").value, document.querySelector("#monthlyIncomeAmount").value);
-  monthlyIncomeForm.reset();
-  monthlyIncomeForm.hidden = true;
-});
-
-monthlyExpenseForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+  const recurring = document.querySelector("#incomeRecurring").checked;
   addMoneyItem(
-    "monthly",
-    "expense",
-    document.querySelector("#monthlyExpenseTitle").value,
-    document.querySelector("#monthlyExpenseAmount").value,
+    recurring ? "monthly" : "extra",
+    "income",
+    document.querySelector("#incomeTitle").value || "Доход",
+    document.querySelector("#incomeAmount").value,
+    "",
+    recurring,
   );
-  monthlyExpenseForm.reset();
-  monthlyExpenseForm.hidden = true;
+  incomeForm.reset();
+  incomeForm.hidden = true;
 });
 
-quickIncomeForm.addEventListener("submit", (event) => {
+expenseForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  addMoneyItem("extra", "income", document.querySelector("#quickIncomeNote").value || "Дополнительный доход", document.querySelector("#quickIncomeAmount").value);
-  quickIncomeForm.reset();
-  quickIncomeForm.hidden = true;
-});
-
-quickExpenseForm.addEventListener("submit", (event) => {
-  event.preventDefault();
+  const recurring = document.querySelector("#expenseRecurring").checked;
+  const category = document.querySelector("#expenseCategory").value;
   addMoneyItem(
-    "extra",
+    recurring ? "monthly" : "extra",
     "expense",
-    document.querySelector("#quickExpenseNote").value || "Дополнительный расход",
-    document.querySelector("#quickExpenseAmount").value,
-    document.querySelector("#quickExpenseCategory").value,
+    document.querySelector("#expenseNote").value || category,
+    document.querySelector("#expenseAmount").value,
+    category,
+    recurring,
   );
-  quickExpenseForm.reset();
-  quickExpenseForm.hidden = true;
+  expenseForm.reset();
+  expenseForm.hidden = true;
 });
 
 exportFinanceButton.addEventListener("click", () => {
