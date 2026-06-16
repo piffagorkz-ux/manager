@@ -5,7 +5,7 @@ const root = path.resolve(__dirname, "..");
 const dist = path.join(root, "dist");
 const config = {
   SUPABASE_URL: process.env.SUPABASE_URL || "",
-  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || "",
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "",
   VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || "",
 };
 

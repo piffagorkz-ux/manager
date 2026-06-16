@@ -128,9 +128,10 @@ async function sendPushNotification(record, env) {
 }
 
 async function supabaseFetch(env, path, init = {}) {
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SECRET_KEY;
   const headers = new Headers(init.headers || {});
-  headers.set("apikey", env.SUPABASE_SERVICE_ROLE_KEY);
-  headers.set("Authorization", `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`);
+  headers.set("apikey", serviceKey);
+  headers.set("Authorization", `Bearer ${serviceKey}`);
   return fetch(`${env.SUPABASE_URL}${path}`, { ...init, headers });
 }
 
@@ -141,7 +142,7 @@ async function getAuthenticatedUser(request, env) {
 
   const response = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
     headers: {
-      apikey: env.SUPABASE_ANON_KEY,
+      apikey: env.SUPABASE_ANON_KEY || env.SUPABASE_PUBLISHABLE_KEY,
       Authorization: `Bearer ${token}`,
     },
   });
