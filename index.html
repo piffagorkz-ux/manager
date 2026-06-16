@@ -2,7 +2,10 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
     <title>Простой трекер задач</title>
     <meta name="theme-color" content="#246b49" />
     <meta name="apple-mobile-web-app-title" content="Планы" />
@@ -269,7 +272,6 @@
                     <span>Постоянный</span>
                   </label>
                   <button class="quiet-button" type="submit">Добавить</button>
-                  <div id="monthlyIncomeList" class="simple-list compact-list"></div>
                 </form>
                 <form class="mini-form finance-entry-form" id="expenseForm" hidden>
                   <strong>Расход</strong>
@@ -297,9 +299,28 @@
                     <span>Постоянный</span>
                   </label>
                   <button class="quiet-button" type="submit">Добавить</button>
-                  <div id="monthlyExpenseList" class="simple-list compact-list"></div>
                 </form>
               </div>
+              <div class="segmented finance-segmented">
+                <button class="finance-mini-tab is-selected" type="button" data-finance-view="entries">Операции</button>
+                <button class="finance-mini-tab" type="button" data-finance-view="recurring">Постоянные</button>
+              </div>
+              <section class="finance-recurring-panel" id="financeRecurringPanel" hidden aria-label="Постоянные доходы и расходы">
+                <div class="finance-recurring-grid">
+                  <section>
+                    <div class="finance-list-head">
+                      <h3>Постоянные доходы</h3>
+                    </div>
+                    <div id="monthlyIncomeList" class="simple-list compact-list"></div>
+                  </section>
+                  <section>
+                    <div class="finance-list-head">
+                      <h3>Постоянные расходы</h3>
+                    </div>
+                    <div id="monthlyExpenseList" class="simple-list compact-list"></div>
+                  </section>
+                </div>
+              </section>
               <section class="finance-analytics" aria-label="Аналитика расходов">
                 <div class="finance-chart-head">
                   <strong>Расходы по категориям</strong>
@@ -309,11 +330,17 @@
               </section>
               <div class="finance-lists">
                 <section>
-                  <div class="finance-list-head">
-                    <h3>Выписка</h3>
-                    <button class="quiet-button" id="exportFinanceButton" type="button">Excel</button>
+                  <button class="finance-statement-toggle" id="financeStatementToggle" type="button" aria-expanded="false">
+                    <span>Выписка</span>
+                    <span class="finance-statement-arrow" aria-hidden="true">⌄</span>
+                  </button>
+                  <div class="finance-statement-panel" id="financeStatementPanel" hidden>
+                    <div class="finance-list-head finance-list-controls">
+                      <select id="financeMonthSelect" aria-label="Выбрать месяц выписки"></select>
+                      <button class="quiet-button" id="exportFinanceButton" type="button">Excel</button>
+                    </div>
+                    <div id="extraMoneyList" class="simple-list statement-list"></div>
                   </div>
-                  <div id="extraMoneyList" class="simple-list statement-list"></div>
                 </section>
               </div>
             </div>

@@ -311,9 +311,14 @@ const financeCategoryChart = document.querySelector("#financeCategoryChart");
 const financeChartTotal = document.querySelector("#financeChartTotal");
 const incomeForm = document.querySelector("#incomeForm");
 const expenseForm = document.querySelector("#expenseForm");
+const financeRecurringPanel = document.querySelector("#financeRecurringPanel");
+const financeStatementToggle = document.querySelector("#financeStatementToggle");
+const financeStatementPanel = document.querySelector("#financeStatementPanel");
+const financeMonthSelect = document.querySelector("#financeMonthSelect");
 const exportFinanceButton = document.querySelector("#exportFinanceButton");
 const financeFormButtons = document.querySelectorAll("[data-finance-form]");
 const financeEntryForms = document.querySelectorAll(".finance-entry-form");
+const financeMiniTabs = document.querySelectorAll("[data-finance-view]");
 const goalForm = document.querySelector("#goalForm");
 const goalLists = {
   month: document.querySelector("#goalsMonth"),
@@ -348,6 +353,9 @@ let wishCloudSuppressClickUntil = 0;
 let goalSectionsOpen = loadGoalSectionsState();
 let notificationSettings = loadNotificationSettings();
 let reminderIntervalId = null;
+let activeFinanceView = "entries";
+let financeStatementOpen = false;
+let selectedFinanceMonth = monthKeyFromDate(Date.now());
 
 init();
 
@@ -1230,17 +1238,37 @@ function renderDailyQuote() {
 function renderFinance() {
   ensureRecurringFinanceEntries();
   const finance = state.finance || createEmptyFinance();
+  const availableMonthKeys = [...new Set(finance.extra.map((item) => item.monthKey || monthKeyFromDate(item.createdAt)))].sort((a, b) => b.localeCompare(a));
+  if (!availableMonthKeys.length) availableMonthKeys.push(monthKeyFromDate(Date.now()));
+  if (!availableMonthKeys.includes(selectedFinanceMonth)) {
+    selectedFinanceMonth = availableMonthKeys[0];
+  }
   const monthEntries = finance.extra.filter((item) => sameMonth(item.createdAt));
+  const selectedMonthEntries = finance.extra.filter((item) => (item.monthKey || monthKeyFromDate(item.createdAt)) === selectedFinanceMonth);
   const monthIncome = sumMoney(monthEntries, "income");
   const monthExpense = sumMoney(monthEntries, "expense");
   const balance = monthIncome - monthExpense;
 
   financeSummary.textContent = `Баланс месяца: ${formatMoney(balance)} · доходы ${formatMoney(monthIncome)} · расходы ${formatMoney(monthExpense)}`;
   financeChartTotal.textContent = `Всего расходов: ${formatMoney(monthExpense)}`;
+  financeRecurringPanel.hidden = activeFinanceView !== "recurring";
+  financeStatementPanel.hidden = !financeStatementOpen;
+  financeStatementToggle.setAttribute("aria-expanded", financeStatementOpen ? "true" : "false");
+  financeMiniTabs.forEach((button) => {
+    button.classList.toggle("is-selected", button.dataset.financeView === activeFinanceView);
+  });
+  financeMonthSelect.innerHTML = "";
+  availableMonthKeys.forEach((monthKey) => {
+    const option = document.createElement("option");
+    option.value = monthKey;
+    option.textContent = formatMonthLabel(monthKey);
+    option.selected = monthKey === selectedFinanceMonth;
+    financeMonthSelect.append(option);
+  });
   renderFinanceCategoryChart(monthEntries);
   renderMoneyList(monthlyIncomeList, finance.monthly.filter((item) => item.type === "income"), "monthly", { editable: true, recurringList: true });
   renderMoneyList(monthlyExpenseList, finance.monthly.filter((item) => item.type === "expense"), "monthly", { editable: true, recurringList: true });
-  renderMoneyList(extraMoneyList, monthEntries, "extra", { showDate: true });
+  renderMoneyList(extraMoneyList, selectedMonthEntries, "extra", { showDate: true });
 }
 
 function renderMoneyList(container, items, group, options = {}) {
@@ -1284,22 +1312,25 @@ function renderMoneyList(container, items, group, options = {}) {
       const amount = document.createElement("strong");
       amount.textContent = `${item.type === "income" ? "+" : "-"}${formatMoney(item.amount)}`;
 
+      const controls = document.createElement("div");
+      controls.className = "simple-row-controls";
+      controls.append(amount);
+
       if (options.editable) {
         const edit = document.createElement("button");
         edit.type = "button";
         edit.textContent = "✎";
         edit.addEventListener("click", () => editMoneyItem(group, item.id));
-        row.append(content, amount, edit);
-      } else {
-        row.append(content, amount);
+        controls.append(edit);
       }
 
       const remove = document.createElement("button");
       remove.type = "button";
       remove.textContent = "x";
       remove.addEventListener("click", () => deleteMoneyItem(group, item.id));
+      controls.append(remove);
 
-      row.append(remove);
+      row.append(content, controls);
       container.append(row);
     });
 }
@@ -1480,6 +1511,10 @@ function formatMonthNameFromDate(value) {
   }).format(date);
 }
 
+function formatMonthLabel(monthKey) {
+  return formatMonthNameFromDate(monthStartTimestamp(monthKey));
+}
+
 function monthKeyFromDate(value) {
   const date = new Date(value);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -1586,7 +1621,7 @@ function exportFinanceStatement() {
   ensureRecurringFinanceEntries();
   const finance = state.finance || createEmptyFinance();
   const rows = finance.extra
-    .filter((item) => sameMonth(item.createdAt))
+    .filter((item) => (item.monthKey || monthKeyFromDate(item.createdAt)) === selectedFinanceMonth)
     .sort((a, b) => a.createdAt - b.createdAt);
 
   if (!rows.length) return;
@@ -1608,7 +1643,7 @@ function exportFinanceStatement() {
   const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  const monthLabel = formatMonthNameFromDate(Date.now()).replace(/\s+/g, "-");
+  const monthLabel = formatMonthLabel(selectedFinanceMonth).replace(/\s+/g, "-");
   link.href = url;
   link.download = `finance-${monthLabel}.csv`;
   link.click();
@@ -2304,12 +2339,33 @@ financeFormButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const target = document.querySelector(`#${button.dataset.financeForm}`);
     const willOpen = target.hidden;
+    activeFinanceView = "entries";
     financeEntryForms.forEach((form) => {
       form.hidden = true;
     });
     target.hidden = !willOpen;
+    renderFinance();
     button.blur();
   });
+});
+
+financeMiniTabs.forEach((button) => {
+  button.addEventListener("click", () => {
+    activeFinanceView = button.dataset.financeView;
+    renderFinance();
+    button.blur();
+  });
+});
+
+financeStatementToggle.addEventListener("click", () => {
+  financeStatementOpen = !financeStatementOpen;
+  renderFinance();
+  financeStatementToggle.blur();
+});
+
+financeMonthSelect.addEventListener("change", () => {
+  selectedFinanceMonth = financeMonthSelect.value;
+  renderFinance();
 });
 
 incomeForm.addEventListener("submit", (event) => {

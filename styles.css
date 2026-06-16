@@ -902,13 +902,14 @@ select {
 }
 
 .finance-icon-button {
-  min-height: 58px;
+  min-height: 74px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--bg);
   color: var(--ink);
-  font-size: 1.35rem;
+  font-size: 2rem;
   font-weight: 900;
+  line-height: 1;
 }
 
 .finance-icon-button.income {
@@ -921,6 +922,54 @@ select {
 
 .finance-entry-form[hidden] {
   display: none;
+}
+
+.finance-segmented {
+  margin-top: 8px;
+}
+
+.finance-mini-tab {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 78%, var(--bg));
+  color: var(--muted);
+  font-weight: 700;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.finance-mini-tab.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  color: var(--ink);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.finance-mini-tab:active {
+  transform: scale(0.985);
+}
+
+.finance-recurring-panel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--panel) 82%, var(--bg));
+  padding: 14px;
+}
+
+.finance-recurring-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.finance-recurring-grid section {
+  display: grid;
+  gap: 10px;
 }
 
 .finance-lists {
@@ -944,6 +993,44 @@ select {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+}
+
+.finance-statement-toggle {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--panel) 82%, var(--bg));
+  color: var(--ink);
+  font-weight: 700;
+  padding: 0 14px;
+  text-align: left;
+}
+
+.finance-statement-arrow {
+  font-size: 1rem;
+  transition: transform 180ms ease;
+}
+
+.finance-statement-toggle[aria-expanded="true"] .finance-statement-arrow {
+  transform: rotate(180deg);
+}
+
+.finance-statement-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.finance-list-controls {
+  flex-wrap: wrap;
+}
+
+.finance-list-controls select {
+  flex: 1 1 190px;
 }
 
 .finance-chart-head strong,
@@ -1034,8 +1121,8 @@ select {
 
 .simple-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 8px;
   min-height: 42px;
   border: 1px solid var(--line);
@@ -1046,7 +1133,7 @@ select {
 }
 
 .simple-row.has-edit {
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .simple-row span {
@@ -1062,6 +1149,18 @@ select {
 .money-row-content small {
   color: var(--muted);
   font-size: 0.8rem;
+}
+
+.simple-row-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.simple-row strong {
+  white-space: nowrap;
 }
 
 .simple-row.income strong {
@@ -1632,6 +1731,7 @@ select {
 
   .finance-icon-actions,
   .finance-form-stack,
+  .finance-recurring-grid,
   .finance-lists,
   .finance-analytics,
   .goal-columns,
@@ -1649,7 +1749,7 @@ select {
   }
 
   .finance-icon-actions {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .habits-panel {
@@ -2083,7 +2183,8 @@ select {
 .habit-delete,
 .module-back,
 .habit-back,
-.finance-icon-button {
+.finance-icon-button,
+.finance-mini-tab {
   background: color-mix(in srgb, var(--panel) 78%, var(--bg));
 }
 
@@ -2094,6 +2195,7 @@ select {
 .mini-form,
 .goal-form,
 .finance-analytics,
+.finance-recurring-panel,
 .simple-row,
 .wish-row,
 .habit-row,
