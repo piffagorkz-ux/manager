@@ -309,6 +309,8 @@ const monthlyExpenseList = document.querySelector("#monthlyExpenseList");
 const extraMoneyList = document.querySelector("#extraMoneyList");
 const financeCategoryChart = document.querySelector("#financeCategoryChart");
 const financeChartTotal = document.querySelector("#financeChartTotal");
+const financeAnalyticsToggle = document.querySelector("#financeAnalyticsToggle");
+const financeAnalyticsPanel = document.querySelector("#financeAnalyticsPanel");
 const incomeForm = document.querySelector("#incomeForm");
 const expenseForm = document.querySelector("#expenseForm");
 const financeRecurringPanel = document.querySelector("#financeRecurringPanel");
@@ -366,6 +368,7 @@ let goalSectionsOpen = loadGoalSectionsState();
 let notificationSettings = loadNotificationSettings();
 let reminderIntervalId = null;
 let activeFinanceView = "entries";
+let financeAnalyticsOpen = true;
 let financeStatementOpen = false;
 let financeExpenseRange = createDefaultFinanceRange();
 let financeStatementRange = createDefaultFinanceRange();
@@ -1264,6 +1267,8 @@ function renderFinance() {
   financeSummary.textContent = `Баланс за период: ${formatMoney(balance)} · доходы ${formatMoney(periodIncome)} · расходы ${formatMoney(periodExpense)}`;
   financeChartTotal.textContent = `Всего расходов за период: ${formatMoney(periodExpense)}`;
   financeRecurringPanel.hidden = activeFinanceView !== "recurring";
+  financeAnalyticsPanel.hidden = !financeAnalyticsOpen;
+  financeAnalyticsToggle.setAttribute("aria-expanded", financeAnalyticsOpen ? "true" : "false");
   financeStatementPanel.hidden = !financeStatementOpen;
   financeStatementToggle.setAttribute("aria-expanded", financeStatementOpen ? "true" : "false");
   financeMiniTabs.forEach((button) => {
@@ -2405,6 +2410,12 @@ financeMiniTabs.forEach((button) => {
     renderFinance();
     button.blur();
   });
+});
+
+financeAnalyticsToggle.addEventListener("click", () => {
+  financeAnalyticsOpen = !financeAnalyticsOpen;
+  renderFinance();
+  financeAnalyticsToggle.blur();
 });
 
 financeStatementToggle.addEventListener("click", () => {

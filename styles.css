@@ -978,6 +978,11 @@ select {
   gap: 12px;
 }
 
+.finance-analytics-shell {
+  display: grid;
+  gap: 10px;
+}
+
 .finance-analytics {
   display: grid;
   gap: 14px;
@@ -985,6 +990,10 @@ select {
   border-radius: 8px;
   background: color-mix(in srgb, var(--panel) 88%, var(--bg));
   padding: 14px;
+}
+
+.finance-analytics[hidden] {
+  display: none;
 }
 
 .finance-chart-head,

@@ -321,16 +321,22 @@
                   </section>
                 </div>
               </section>
-              <section class="finance-analytics" aria-label="Аналитика расходов">
-                <div class="finance-chart-head">
-                  <strong>Расходы по категориям</strong>
-                  <small id="financeChartTotal">0</small>
-                </div>
-                <button class="finance-range-trigger" id="financeExpenseRangeTrigger" type="button">
-                  <span class="finance-range-trigger-label">Период</span>
-                  <strong id="financeExpenseRangeValue">...</strong>
+              <section class="finance-analytics-shell">
+                <button class="finance-statement-toggle" id="financeAnalyticsToggle" type="button" aria-expanded="true">
+                  <span>Расходы по категориям</span>
+                  <span class="finance-statement-arrow" aria-hidden="true">⌄</span>
                 </button>
-                <div id="financeCategoryChart" class="finance-category-chart"></div>
+                <section class="finance-analytics" id="financeAnalyticsPanel" aria-label="Аналитика расходов">
+                  <div class="finance-chart-head">
+                    <strong>Расходы по категориям</strong>
+                    <small id="financeChartTotal">0</small>
+                  </div>
+                  <button class="finance-range-trigger" id="financeExpenseRangeTrigger" type="button">
+                    <span class="finance-range-trigger-label">Период</span>
+                    <strong id="financeExpenseRangeValue">...</strong>
+                  </button>
+                  <div id="financeCategoryChart" class="finance-category-chart"></div>
+                </section>
               </section>
               <div class="finance-lists">
                 <section>
