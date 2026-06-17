@@ -1112,9 +1112,9 @@ select {
 .finance-range-field.is-sheet span {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   min-height: 40px;
-  text-align: center;
+  text-align: left;
 }
 
 .finance-range-dialog {
