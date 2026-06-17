@@ -326,9 +326,15 @@
                   <strong>Расходы по категориям</strong>
                   <small id="financeChartTotal">0</small>
                 </div>
-                <div class="segmented finance-period-segmented">
-                  <button class="finance-period-tab is-selected" id="financeExpenseMonth" type="button" data-finance-expense-period="month">Месяц</button>
-                  <button class="finance-period-tab" id="financeExpenseWeek" type="button" data-finance-expense-period="week">Неделя</button>
+                <div class="finance-range-grid">
+                  <label class="finance-range-field">
+                    <span>С</span>
+                    <input id="financeExpenseStart" type="date" />
+                  </label>
+                  <label class="finance-range-field">
+                    <span>По</span>
+                    <input id="financeExpenseEnd" type="date" />
+                  </label>
                 </div>
                 <div id="financeCategoryChart" class="finance-category-chart"></div>
               </section>
@@ -340,13 +346,18 @@
                   </button>
                   <div class="finance-statement-panel" id="financeStatementPanel" hidden>
                     <div class="finance-statement-toolbar">
-                      <div class="segmented finance-period-segmented">
-                        <button class="finance-period-tab is-selected" type="button" data-finance-statement-period="month">Месяц</button>
-                        <button class="finance-period-tab" type="button" data-finance-statement-period="week">Неделя</button>
-                      </div>
                       <button class="quiet-button" id="exportFinanceButton" type="button">Excel</button>
                     </div>
-                    <select id="financeMonthSelect" aria-label="Выбрать месяц выписки"></select>
+                    <div class="finance-range-grid">
+                      <label class="finance-range-field">
+                        <span>С</span>
+                        <input id="financeStatementStart" type="date" />
+                      </label>
+                      <label class="finance-range-field">
+                        <span>По</span>
+                        <input id="financeStatementEnd" type="date" />
+                      </label>
+                    </div>
                     <div id="extraMoneyList" class="simple-list statement-list"></div>
                   </div>
                 </section>

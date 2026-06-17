@@ -314,13 +314,14 @@ const expenseForm = document.querySelector("#expenseForm");
 const financeRecurringPanel = document.querySelector("#financeRecurringPanel");
 const financeStatementToggle = document.querySelector("#financeStatementToggle");
 const financeStatementPanel = document.querySelector("#financeStatementPanel");
-const financeMonthSelect = document.querySelector("#financeMonthSelect");
+const financeExpenseStart = document.querySelector("#financeExpenseStart");
+const financeExpenseEnd = document.querySelector("#financeExpenseEnd");
+const financeStatementStart = document.querySelector("#financeStatementStart");
+const financeStatementEnd = document.querySelector("#financeStatementEnd");
 const exportFinanceButton = document.querySelector("#exportFinanceButton");
 const financeFormButtons = document.querySelectorAll("[data-finance-form]");
 const financeEntryForms = document.querySelectorAll(".finance-entry-form");
 const financeMiniTabs = document.querySelectorAll("[data-finance-view]");
-const financeExpensePeriodTabs = document.querySelectorAll("[data-finance-expense-period]");
-const financeStatementPeriodTabs = document.querySelectorAll("[data-finance-statement-period]");
 const goalForm = document.querySelector("#goalForm");
 const goalLists = {
   month: document.querySelector("#goalsMonth"),
@@ -357,9 +358,8 @@ let notificationSettings = loadNotificationSettings();
 let reminderIntervalId = null;
 let activeFinanceView = "entries";
 let financeStatementOpen = false;
-let selectedFinanceMonth = monthKeyFromDate(Date.now());
-let selectedFinanceExpensePeriod = "month";
-let selectedFinanceStatementPeriod = "month";
+let financeExpenseRange = createDefaultFinanceRange();
+let financeStatementRange = createDefaultFinanceRange();
 
 init();
 
@@ -1242,40 +1242,26 @@ function renderDailyQuote() {
 function renderFinance() {
   ensureRecurringFinanceEntries();
   const finance = state.finance || createEmptyFinance();
-  const availableMonthKeys = [...new Set(finance.extra.map((item) => item.monthKey || monthKeyFromDate(item.createdAt)))].sort((a, b) => b.localeCompare(a));
-  if (!availableMonthKeys.length) availableMonthKeys.push(monthKeyFromDate(Date.now()));
-  if (!availableMonthKeys.includes(selectedFinanceMonth)) {
-    selectedFinanceMonth = availableMonthKeys[0];
-  }
-  const summaryEntries = filterFinanceEntries(finance.extra, selectedFinanceExpensePeriod, selectedFinanceMonth);
-  const statementEntries = filterFinanceEntries(finance.extra, selectedFinanceStatementPeriod, selectedFinanceMonth);
+  financeExpenseRange = normalizeFinanceRange(financeExpenseRange);
+  financeStatementRange = normalizeFinanceRange(financeStatementRange);
+  const summaryEntries = filterFinanceEntriesByRange(finance.extra, financeExpenseRange);
+  const statementEntries = filterFinanceEntriesByRange(finance.extra, financeStatementRange);
   const periodIncome = sumMoney(summaryEntries, "income");
   const periodExpense = sumMoney(summaryEntries, "expense");
   const balance = periodIncome - periodExpense;
 
-  financeSummary.textContent = `Баланс ${financePeriodLabelGenitive(selectedFinanceExpensePeriod)}: ${formatMoney(balance)} · доходы ${formatMoney(periodIncome)} · расходы ${formatMoney(periodExpense)}`;
-  financeChartTotal.textContent = `Всего расходов за ${financePeriodLabelAccusative(selectedFinanceExpensePeriod)}: ${formatMoney(periodExpense)}`;
+  financeSummary.textContent = `Баланс за период: ${formatMoney(balance)} · доходы ${formatMoney(periodIncome)} · расходы ${formatMoney(periodExpense)}`;
+  financeChartTotal.textContent = `Всего расходов за период: ${formatMoney(periodExpense)}`;
   financeRecurringPanel.hidden = activeFinanceView !== "recurring";
   financeStatementPanel.hidden = !financeStatementOpen;
   financeStatementToggle.setAttribute("aria-expanded", financeStatementOpen ? "true" : "false");
-  financeMonthSelect.hidden = selectedFinanceStatementPeriod !== "month";
   financeMiniTabs.forEach((button) => {
     button.classList.toggle("is-selected", button.dataset.financeView === activeFinanceView);
   });
-  financeExpensePeriodTabs.forEach((button) => {
-    button.classList.toggle("is-selected", button.dataset.financeExpensePeriod === selectedFinanceExpensePeriod);
-  });
-  financeStatementPeriodTabs.forEach((button) => {
-    button.classList.toggle("is-selected", button.dataset.financeStatementPeriod === selectedFinanceStatementPeriod);
-  });
-  financeMonthSelect.innerHTML = "";
-  availableMonthKeys.forEach((monthKey) => {
-    const option = document.createElement("option");
-    option.value = monthKey;
-    option.textContent = formatMonthLabel(monthKey);
-    option.selected = monthKey === selectedFinanceMonth;
-    financeMonthSelect.append(option);
-  });
+  financeExpenseStart.value = financeExpenseRange.start;
+  financeExpenseEnd.value = financeExpenseRange.end;
+  financeStatementStart.value = financeStatementRange.start;
+  financeStatementEnd.value = financeStatementRange.end;
   renderFinanceCategoryChart(summaryEntries);
   renderMoneyList(monthlyIncomeList, finance.monthly.filter((item) => item.type === "income"), "monthly", { editable: true, recurringList: true });
   renderMoneyList(monthlyExpenseList, finance.monthly.filter((item) => item.type === "expense"), "monthly", { editable: true, recurringList: true });
@@ -1523,18 +1509,6 @@ function formatMonthNameFromDate(value) {
   }).format(date);
 }
 
-function formatMonthLabel(monthKey) {
-  return formatMonthNameFromDate(monthStartTimestamp(monthKey));
-}
-
-function financePeriodLabelGenitive(period) {
-  return period === "week" ? "недели" : "месяца";
-}
-
-function financePeriodLabelAccusative(period) {
-  return period === "week" ? "неделю" : "месяц";
-}
-
 function monthKeyFromDate(value) {
   const date = new Date(value);
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
@@ -1551,22 +1525,37 @@ function sameMonth(value, reference = Date.now()) {
   return date.getFullYear() === current.getFullYear() && date.getMonth() === current.getMonth();
 }
 
-function isWithinLastDays(value, days, reference = Date.now()) {
-  const referenceDate = new Date(reference);
-  referenceDate.setHours(23, 59, 59, 999);
-  const startDate = new Date(referenceDate);
-  startDate.setDate(startDate.getDate() - (days - 1));
-  startDate.setHours(0, 0, 0, 0);
-  const timestamp = new Date(value).getTime();
-  return timestamp >= startDate.getTime() && timestamp <= referenceDate.getTime();
+function startOfCurrentMonthISO(reference = todayISO()) {
+  const [year, month] = reference.split("-").map(Number);
+  return `${year}-${String(month).padStart(2, "0")}-01`;
 }
 
-function filterFinanceEntries(items, period, monthKey) {
-  if (period === "week") {
-    return items.filter((item) => isWithinLastDays(item.createdAt, 7));
+function createDefaultFinanceRange() {
+  return {
+    start: startOfCurrentMonthISO(),
+    end: todayISO(),
+  };
+}
+
+function normalizeFinanceRange(range) {
+  const fallback = createDefaultFinanceRange();
+  const start = range?.start || fallback.start;
+  const end = range?.end || fallback.end;
+  if (start <= end) {
+    return { start, end };
   }
 
-  return items.filter((item) => (item.monthKey || monthKeyFromDate(item.createdAt)) === monthKey);
+  return { start: end, end: start };
+}
+
+function filterFinanceEntriesByRange(items, range) {
+  const normalized = normalizeFinanceRange(range);
+  const start = new Date(`${normalized.start}T00:00:00`).getTime();
+  const end = new Date(`${normalized.end}T23:59:59.999`).getTime();
+  return items.filter((item) => {
+    const timestamp = new Date(item.createdAt).getTime();
+    return timestamp >= start && timestamp <= end;
+  });
 }
 
 function monthKeysBetween(startValue, endValue = Date.now()) {
@@ -1658,7 +1647,8 @@ function formatMoney(value) {
 function exportFinanceStatement() {
   ensureRecurringFinanceEntries();
   const finance = state.finance || createEmptyFinance();
-  const rows = filterFinanceEntries(finance.extra, selectedFinanceStatementPeriod, selectedFinanceMonth).sort((a, b) => a.createdAt - b.createdAt);
+  const normalizedRange = normalizeFinanceRange(financeStatementRange);
+  const rows = filterFinanceEntriesByRange(finance.extra, normalizedRange).sort((a, b) => a.createdAt - b.createdAt);
 
   if (!rows.length) return;
 
@@ -1679,9 +1669,7 @@ function exportFinanceStatement() {
   const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  const monthLabel = selectedFinanceStatementPeriod === "week"
-    ? "last-7-days"
-    : formatMonthLabel(selectedFinanceMonth).replace(/\s+/g, "-");
+  const monthLabel = `${normalizedRange.start}_to_${normalizedRange.end}`;
   link.href = url;
   link.download = `finance-${monthLabel}.csv`;
   link.click();
@@ -2395,30 +2383,29 @@ financeMiniTabs.forEach((button) => {
   });
 });
 
-financeExpensePeriodTabs.forEach((button) => {
-  button.addEventListener("click", () => {
-    selectedFinanceExpensePeriod = button.dataset.financeExpensePeriod;
-    renderFinance();
-    button.blur();
-  });
-});
-
-financeStatementPeriodTabs.forEach((button) => {
-  button.addEventListener("click", () => {
-    selectedFinanceStatementPeriod = button.dataset.financeStatementPeriod;
-    renderFinance();
-    button.blur();
-  });
-});
-
 financeStatementToggle.addEventListener("click", () => {
   financeStatementOpen = !financeStatementOpen;
   renderFinance();
   financeStatementToggle.blur();
 });
 
-financeMonthSelect.addEventListener("change", () => {
-  selectedFinanceMonth = financeMonthSelect.value;
+financeExpenseStart.addEventListener("change", () => {
+  financeExpenseRange.start = financeExpenseStart.value || financeExpenseRange.start;
+  renderFinance();
+});
+
+financeExpenseEnd.addEventListener("change", () => {
+  financeExpenseRange.end = financeExpenseEnd.value || financeExpenseRange.end;
+  renderFinance();
+});
+
+financeStatementStart.addEventListener("change", () => {
+  financeStatementRange.start = financeStatementStart.value || financeStatementRange.start;
+  renderFinance();
+});
+
+financeStatementEnd.addEventListener("change", () => {
+  financeStatementRange.end = financeStatementEnd.value || financeStatementRange.end;
   renderFinance();
 });
 
