@@ -312,8 +312,12 @@ const financeChartTotal = document.querySelector("#financeChartTotal");
 const incomeForm = document.querySelector("#incomeForm");
 const expenseForm = document.querySelector("#expenseForm");
 const financeRecurringPanel = document.querySelector("#financeRecurringPanel");
+const financeExpensePeriodToggle = document.querySelector("#financeExpensePeriodToggle");
+const financeExpensePeriodPanel = document.querySelector("#financeExpensePeriodPanel");
 const financeStatementToggle = document.querySelector("#financeStatementToggle");
 const financeStatementPanel = document.querySelector("#financeStatementPanel");
+const financeStatementPeriodToggle = document.querySelector("#financeStatementPeriodToggle");
+const financeStatementPeriodPanel = document.querySelector("#financeStatementPeriodPanel");
 const financeExpenseStart = document.querySelector("#financeExpenseStart");
 const financeExpenseEnd = document.querySelector("#financeExpenseEnd");
 const financeStatementStart = document.querySelector("#financeStatementStart");
@@ -358,6 +362,8 @@ let notificationSettings = loadNotificationSettings();
 let reminderIntervalId = null;
 let activeFinanceView = "entries";
 let financeStatementOpen = false;
+let financeExpensePeriodOpen = false;
+let financeStatementPeriodOpen = false;
 let financeExpenseRange = createDefaultFinanceRange();
 let financeStatementRange = createDefaultFinanceRange();
 
@@ -1253,8 +1259,12 @@ function renderFinance() {
   financeSummary.textContent = `Баланс за период: ${formatMoney(balance)} · доходы ${formatMoney(periodIncome)} · расходы ${formatMoney(periodExpense)}`;
   financeChartTotal.textContent = `Всего расходов за период: ${formatMoney(periodExpense)}`;
   financeRecurringPanel.hidden = activeFinanceView !== "recurring";
+  financeExpensePeriodPanel.hidden = !financeExpensePeriodOpen;
+  financeExpensePeriodToggle.setAttribute("aria-expanded", financeExpensePeriodOpen ? "true" : "false");
   financeStatementPanel.hidden = !financeStatementOpen;
   financeStatementToggle.setAttribute("aria-expanded", financeStatementOpen ? "true" : "false");
+  financeStatementPeriodPanel.hidden = !financeStatementPeriodOpen;
+  financeStatementPeriodToggle.setAttribute("aria-expanded", financeStatementPeriodOpen ? "true" : "false");
   financeMiniTabs.forEach((button) => {
     button.classList.toggle("is-selected", button.dataset.financeView === activeFinanceView);
   });
@@ -2383,10 +2393,22 @@ financeMiniTabs.forEach((button) => {
   });
 });
 
+financeExpensePeriodToggle.addEventListener("click", () => {
+  financeExpensePeriodOpen = !financeExpensePeriodOpen;
+  renderFinance();
+  financeExpensePeriodToggle.blur();
+});
+
 financeStatementToggle.addEventListener("click", () => {
   financeStatementOpen = !financeStatementOpen;
   renderFinance();
   financeStatementToggle.blur();
+});
+
+financeStatementPeriodToggle.addEventListener("click", () => {
+  financeStatementPeriodOpen = !financeStatementPeriodOpen;
+  renderFinance();
+  financeStatementPeriodToggle.blur();
 });
 
 financeExpenseStart.addEventListener("change", () => {

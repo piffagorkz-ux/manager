@@ -326,15 +326,21 @@
                   <strong>Расходы по категориям</strong>
                   <small id="financeChartTotal">0</small>
                 </div>
-                <div class="finance-range-grid">
-                  <label class="finance-range-field">
-                    <span>С</span>
-                    <input id="financeExpenseStart" type="date" />
-                  </label>
-                  <label class="finance-range-field">
-                    <span>По</span>
-                    <input id="financeExpenseEnd" type="date" />
-                  </label>
+                <button class="finance-period-toggle" id="financeExpensePeriodToggle" type="button" aria-expanded="false">
+                  <span>Период</span>
+                  <span class="finance-statement-arrow" aria-hidden="true">⌄</span>
+                </button>
+                <div class="finance-period-panel" id="financeExpensePeriodPanel" hidden>
+                  <div class="finance-range-grid">
+                    <label class="finance-range-field">
+                      <span>С</span>
+                      <input id="financeExpenseStart" type="date" />
+                    </label>
+                    <label class="finance-range-field">
+                      <span>По</span>
+                      <input id="financeExpenseEnd" type="date" />
+                    </label>
+                  </div>
                 </div>
                 <div id="financeCategoryChart" class="finance-category-chart"></div>
               </section>
@@ -346,17 +352,23 @@
                   </button>
                   <div class="finance-statement-panel" id="financeStatementPanel" hidden>
                     <div class="finance-statement-toolbar">
+                      <button class="finance-period-toggle" id="financeStatementPeriodToggle" type="button" aria-expanded="false">
+                        <span>Период</span>
+                        <span class="finance-statement-arrow" aria-hidden="true">⌄</span>
+                      </button>
                       <button class="quiet-button" id="exportFinanceButton" type="button">Excel</button>
                     </div>
-                    <div class="finance-range-grid">
-                      <label class="finance-range-field">
-                        <span>С</span>
-                        <input id="financeStatementStart" type="date" />
-                      </label>
-                      <label class="finance-range-field">
-                        <span>По</span>
-                        <input id="financeStatementEnd" type="date" />
-                      </label>
+                    <div class="finance-period-panel" id="financeStatementPeriodPanel" hidden>
+                      <div class="finance-range-grid">
+                        <label class="finance-range-field">
+                          <span>С</span>
+                          <input id="financeStatementStart" type="date" />
+                        </label>
+                        <label class="finance-range-field">
+                          <span>По</span>
+                          <input id="financeStatementEnd" type="date" />
+                        </label>
+                      </div>
                     </div>
                     <div id="extraMoneyList" class="simple-list statement-list"></div>
                   </div>

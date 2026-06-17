@@ -1029,12 +1029,36 @@ select {
   display: none;
 }
 
+.finance-period-toggle {
+  width: fit-content;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 78%, var(--bg));
+  color: var(--ink);
+  font-weight: 700;
+  padding: 0 12px;
+}
+
+.finance-period-panel {
+  display: grid;
+  gap: 8px;
+}
+
+.finance-period-panel[hidden] {
+  display: none;
+}
+
 .finance-statement-toolbar {
   display: grid;
-  grid-template-columns: auto;
+  grid-template-columns: auto auto;
   gap: 10px;
   align-items: center;
-  justify-content: end;
+  justify-content: space-between;
 }
 
 .finance-range-grid {
