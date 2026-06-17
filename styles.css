@@ -1103,9 +1103,18 @@ select {
 }
 
 .finance-range-field.is-sheet {
-  grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
   padding: 10px 12px;
+}
+
+.finance-range-field.is-sheet span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  text-align: center;
 }
 
 .finance-range-dialog {
