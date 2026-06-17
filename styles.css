@@ -1115,6 +1115,13 @@ select {
   text-align: center;
 }
 
+.finance-range-field input:focus,
+.finance-range-field input:focus-visible {
+  outline: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
 .finance-range-dialog {
   position: fixed;
   inset: 0;
