@@ -1029,12 +1029,41 @@ select {
   display: none;
 }
 
-.finance-list-controls {
-  flex-wrap: wrap;
+.finance-statement-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
 }
 
-.finance-list-controls select {
-  flex: 1 1 190px;
+.finance-period-segmented {
+  gap: 6px;
+}
+
+.finance-period-tab {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 78%, var(--bg));
+  color: var(--muted);
+  font-weight: 700;
+  padding: 0 12px;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.finance-period-tab.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  color: var(--ink);
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+.finance-statement-panel select {
+  width: 100%;
 }
 
 .finance-chart-head strong,
@@ -1763,6 +1792,10 @@ select {
   }
 
   .wish-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .finance-statement-toolbar {
     grid-template-columns: minmax(0, 1fr);
   }
 
