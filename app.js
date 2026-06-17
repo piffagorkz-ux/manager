@@ -1337,7 +1337,8 @@ function renderMoneyList(container, items, group, options = {}) {
 
 function renderFinanceCategoryChart(items) {
   financeCategoryChart.innerHTML = "";
-  const total = items.reduce((sum, item) => sum + item.amount, 0);
+  const expenses = items.filter((item) => item.type === "expense");
+  const total = expenses.reduce((sum, item) => sum + item.amount, 0);
 
   if (!total) {
     const empty = document.createElement("p");
@@ -1348,7 +1349,7 @@ function renderFinanceCategoryChart(items) {
   }
 
   const categoryMap = new Map();
-  items.forEach((item) => {
+  expenses.forEach((item) => {
     const label = item.category || item.title || "Иное";
     categoryMap.set(label, (categoryMap.get(label) || 0) + item.amount);
   });
