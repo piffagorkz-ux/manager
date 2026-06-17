@@ -326,22 +326,10 @@
                   <strong>Расходы по категориям</strong>
                   <small id="financeChartTotal">0</small>
                 </div>
-                <button class="finance-period-toggle" id="financeExpensePeriodToggle" type="button" aria-expanded="false">
-                  <span>Период</span>
-                  <span class="finance-statement-arrow" aria-hidden="true">⌄</span>
+                <button class="finance-range-trigger" id="financeExpenseRangeTrigger" type="button">
+                  <span class="finance-range-trigger-label">Период</span>
+                  <strong id="financeExpenseRangeValue">...</strong>
                 </button>
-                <div class="finance-period-panel" id="financeExpensePeriodPanel" hidden>
-                  <div class="finance-range-grid">
-                    <label class="finance-range-field">
-                      <span>С</span>
-                      <input id="financeExpenseStart" type="date" />
-                    </label>
-                    <label class="finance-range-field">
-                      <span>По</span>
-                      <input id="financeExpenseEnd" type="date" />
-                    </label>
-                  </div>
-                </div>
                 <div id="financeCategoryChart" class="finance-category-chart"></div>
               </section>
               <div class="finance-lists">
@@ -352,23 +340,11 @@
                   </button>
                   <div class="finance-statement-panel" id="financeStatementPanel" hidden>
                     <div class="finance-statement-toolbar">
-                      <button class="finance-period-toggle" id="financeStatementPeriodToggle" type="button" aria-expanded="false">
-                        <span>Период</span>
-                        <span class="finance-statement-arrow" aria-hidden="true">⌄</span>
+                      <button class="finance-range-trigger" id="financeStatementRangeTrigger" type="button">
+                        <span class="finance-range-trigger-label">Период</span>
+                        <strong id="financeStatementRangeValue">...</strong>
                       </button>
                       <button class="quiet-button" id="exportFinanceButton" type="button">Excel</button>
-                    </div>
-                    <div class="finance-period-panel" id="financeStatementPeriodPanel" hidden>
-                      <div class="finance-range-grid">
-                        <label class="finance-range-field">
-                          <span>С</span>
-                          <input id="financeStatementStart" type="date" />
-                        </label>
-                        <label class="finance-range-field">
-                          <span>По</span>
-                          <input id="financeStatementEnd" type="date" />
-                        </label>
-                      </div>
                     </div>
                     <div id="extraMoneyList" class="simple-list statement-list"></div>
                   </div>
@@ -377,6 +353,31 @@
             </div>
           </section>
         </section>
+
+        <div class="finance-range-dialog" id="financeRangeDialog" hidden>
+          <button class="finance-range-backdrop" id="financeRangeBackdrop" type="button" aria-label="Закрыть выбор периода"></button>
+          <section class="finance-range-sheet" role="dialog" aria-modal="true" aria-labelledby="financeRangeTitle">
+            <div class="finance-range-sheet-head">
+              <h3 id="financeRangeTitle">Период</h3>
+              <button class="finance-range-close" id="financeRangeClose" type="button" aria-label="Закрыть">×</button>
+            </div>
+            <p class="finance-range-caption" id="financeRangeCaption">Выбери даты, за которые показать данные.</p>
+            <div class="finance-range-grid is-sheet">
+              <label class="finance-range-field is-sheet">
+                <span>С</span>
+                <input id="financeRangeStart" type="date" />
+              </label>
+              <label class="finance-range-field is-sheet">
+                <span>По</span>
+                <input id="financeRangeEnd" type="date" />
+              </label>
+            </div>
+            <div class="finance-range-actions">
+              <button class="quiet-button" id="financeRangeReset" type="button">Этот месяц</button>
+              <button class="add-button" id="financeRangeApply" type="button">Готово</button>
+            </div>
+          </section>
+        </div>
 
         <section class="module-shell simple-module" id="goalsModule" hidden>
           <button class="module-back" type="button" data-module-back>← На главную</button>

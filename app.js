@@ -312,16 +312,21 @@ const financeChartTotal = document.querySelector("#financeChartTotal");
 const incomeForm = document.querySelector("#incomeForm");
 const expenseForm = document.querySelector("#expenseForm");
 const financeRecurringPanel = document.querySelector("#financeRecurringPanel");
-const financeExpensePeriodToggle = document.querySelector("#financeExpensePeriodToggle");
-const financeExpensePeriodPanel = document.querySelector("#financeExpensePeriodPanel");
+const financeExpenseRangeTrigger = document.querySelector("#financeExpenseRangeTrigger");
+const financeExpenseRangeValue = document.querySelector("#financeExpenseRangeValue");
 const financeStatementToggle = document.querySelector("#financeStatementToggle");
 const financeStatementPanel = document.querySelector("#financeStatementPanel");
-const financeStatementPeriodToggle = document.querySelector("#financeStatementPeriodToggle");
-const financeStatementPeriodPanel = document.querySelector("#financeStatementPeriodPanel");
-const financeExpenseStart = document.querySelector("#financeExpenseStart");
-const financeExpenseEnd = document.querySelector("#financeExpenseEnd");
-const financeStatementStart = document.querySelector("#financeStatementStart");
-const financeStatementEnd = document.querySelector("#financeStatementEnd");
+const financeStatementRangeTrigger = document.querySelector("#financeStatementRangeTrigger");
+const financeStatementRangeValue = document.querySelector("#financeStatementRangeValue");
+const financeRangeDialog = document.querySelector("#financeRangeDialog");
+const financeRangeBackdrop = document.querySelector("#financeRangeBackdrop");
+const financeRangeTitle = document.querySelector("#financeRangeTitle");
+const financeRangeCaption = document.querySelector("#financeRangeCaption");
+const financeRangeStart = document.querySelector("#financeRangeStart");
+const financeRangeEnd = document.querySelector("#financeRangeEnd");
+const financeRangeReset = document.querySelector("#financeRangeReset");
+const financeRangeApply = document.querySelector("#financeRangeApply");
+const financeRangeClose = document.querySelector("#financeRangeClose");
 const exportFinanceButton = document.querySelector("#exportFinanceButton");
 const financeFormButtons = document.querySelectorAll("[data-finance-form]");
 const financeEntryForms = document.querySelectorAll(".finance-entry-form");
@@ -362,10 +367,10 @@ let notificationSettings = loadNotificationSettings();
 let reminderIntervalId = null;
 let activeFinanceView = "entries";
 let financeStatementOpen = false;
-let financeExpensePeriodOpen = false;
-let financeStatementPeriodOpen = false;
 let financeExpenseRange = createDefaultFinanceRange();
 let financeStatementRange = createDefaultFinanceRange();
+let activeFinanceRangeTarget = "expense";
+let financeRangeDraft = createDefaultFinanceRange();
 
 init();
 
@@ -1259,19 +1264,13 @@ function renderFinance() {
   financeSummary.textContent = `Баланс за период: ${formatMoney(balance)} · доходы ${formatMoney(periodIncome)} · расходы ${formatMoney(periodExpense)}`;
   financeChartTotal.textContent = `Всего расходов за период: ${formatMoney(periodExpense)}`;
   financeRecurringPanel.hidden = activeFinanceView !== "recurring";
-  financeExpensePeriodPanel.hidden = !financeExpensePeriodOpen;
-  financeExpensePeriodToggle.setAttribute("aria-expanded", financeExpensePeriodOpen ? "true" : "false");
   financeStatementPanel.hidden = !financeStatementOpen;
   financeStatementToggle.setAttribute("aria-expanded", financeStatementOpen ? "true" : "false");
-  financeStatementPeriodPanel.hidden = !financeStatementPeriodOpen;
-  financeStatementPeriodToggle.setAttribute("aria-expanded", financeStatementPeriodOpen ? "true" : "false");
   financeMiniTabs.forEach((button) => {
     button.classList.toggle("is-selected", button.dataset.financeView === activeFinanceView);
   });
-  financeExpenseStart.value = financeExpenseRange.start;
-  financeExpenseEnd.value = financeExpenseRange.end;
-  financeStatementStart.value = financeStatementRange.start;
-  financeStatementEnd.value = financeStatementRange.end;
+  financeExpenseRangeValue.textContent = formatFinanceRangeLabel(financeExpenseRange);
+  financeStatementRangeValue.textContent = formatFinanceRangeLabel(financeStatementRange);
   renderFinanceCategoryChart(summaryEntries);
   renderMoneyList(monthlyIncomeList, finance.monthly.filter((item) => item.type === "income"), "monthly", { editable: true, recurringList: true });
   renderMoneyList(monthlyExpenseList, finance.monthly.filter((item) => item.type === "expense"), "monthly", { editable: true, recurringList: true });
@@ -1556,6 +1555,21 @@ function normalizeFinanceRange(range) {
   }
 
   return { start: end, end: start };
+}
+
+function formatFinanceRangeLabel(range) {
+  const normalized = normalizeFinanceRange(range);
+  const startLabel = new Intl.DateTimeFormat(activeLang === "ru" ? "ru-RU" : "en-US", {
+    day: "numeric",
+    month: "short",
+  }).format(new Date(`${normalized.start}T12:00:00`));
+  const endLabel = new Intl.DateTimeFormat(activeLang === "ru" ? "ru-RU" : "en-US", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(`${normalized.end}T12:00:00`));
+
+  return `${startLabel} - ${endLabel}`;
 }
 
 function filterFinanceEntriesByRange(items, range) {
@@ -2393,41 +2407,61 @@ financeMiniTabs.forEach((button) => {
   });
 });
 
-financeExpensePeriodToggle.addEventListener("click", () => {
-  financeExpensePeriodOpen = !financeExpensePeriodOpen;
-  renderFinance();
-  financeExpensePeriodToggle.blur();
-});
-
 financeStatementToggle.addEventListener("click", () => {
   financeStatementOpen = !financeStatementOpen;
   renderFinance();
   financeStatementToggle.blur();
 });
 
-financeStatementPeriodToggle.addEventListener("click", () => {
-  financeStatementPeriodOpen = !financeStatementPeriodOpen;
-  renderFinance();
-  financeStatementPeriodToggle.blur();
+function openFinanceRangeDialog(target) {
+  activeFinanceRangeTarget = target;
+  financeRangeDraft = normalizeFinanceRange(target === "expense" ? financeExpenseRange : financeStatementRange);
+  financeRangeTitle.textContent = target === "expense" ? "Период расходов" : "Период выписки";
+  financeRangeCaption.textContent =
+    target === "expense"
+      ? "Выбери даты, за которые показать аналитику расходов."
+      : "Выбери даты, за которые показать выписку.";
+  financeRangeStart.value = financeRangeDraft.start;
+  financeRangeEnd.value = financeRangeDraft.end;
+  financeRangeDialog.hidden = false;
+}
+
+function closeFinanceRangeDialog() {
+  financeRangeDialog.hidden = true;
+}
+
+financeExpenseRangeTrigger.addEventListener("click", () => {
+  openFinanceRangeDialog("expense");
+  financeExpenseRangeTrigger.blur();
 });
 
-financeExpenseStart.addEventListener("change", () => {
-  financeExpenseRange.start = financeExpenseStart.value || financeExpenseRange.start;
-  renderFinance();
+financeStatementRangeTrigger.addEventListener("click", () => {
+  openFinanceRangeDialog("statement");
+  financeStatementRangeTrigger.blur();
 });
 
-financeExpenseEnd.addEventListener("change", () => {
-  financeExpenseRange.end = financeExpenseEnd.value || financeExpenseRange.end;
-  renderFinance();
+financeRangeBackdrop.addEventListener("click", closeFinanceRangeDialog);
+financeRangeClose.addEventListener("click", closeFinanceRangeDialog);
+
+financeRangeReset.addEventListener("click", () => {
+  financeRangeDraft = createDefaultFinanceRange();
+  financeRangeStart.value = financeRangeDraft.start;
+  financeRangeEnd.value = financeRangeDraft.end;
 });
 
-financeStatementStart.addEventListener("change", () => {
-  financeStatementRange.start = financeStatementStart.value || financeStatementRange.start;
-  renderFinance();
-});
+financeRangeApply.addEventListener("click", () => {
+  financeRangeDraft = normalizeFinanceRange({
+    start: financeRangeStart.value || financeRangeDraft.start,
+    end: financeRangeEnd.value || financeRangeDraft.end,
+  });
 
-financeStatementEnd.addEventListener("change", () => {
-  financeStatementRange.end = financeStatementEnd.value || financeStatementRange.end;
+  if (activeFinanceRangeTarget === "expense") {
+    financeExpenseRange = financeRangeDraft;
+  } else {
+    financeStatementRange = financeRangeDraft;
+  }
+
+  closeFinanceRangeDialog();
   renderFinance();
 });
 

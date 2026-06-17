@@ -1029,28 +1029,30 @@ select {
   display: none;
 }
 
-.finance-period-toggle {
-  width: fit-content;
-  min-height: 38px;
-  display: inline-flex;
+.finance-range-trigger {
+  width: 100%;
+  min-height: 48px;
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   border: 1px solid var(--line);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--panel) 78%, var(--bg));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--panel) 80%, var(--bg));
   color: var(--ink);
+  padding: 0 14px;
+  text-align: left;
+}
+
+.finance-range-trigger-label {
+  color: var(--muted);
+  font-size: 0.82rem;
   font-weight: 700;
-  padding: 0 12px;
 }
 
-.finance-period-panel {
-  display: grid;
-  gap: 8px;
-}
-
-.finance-period-panel[hidden] {
-  display: none;
+.finance-range-trigger strong {
+  font-size: 0.92rem;
+  font-weight: 700;
 }
 
 .finance-statement-toolbar {
@@ -1066,6 +1068,11 @@ select {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   align-items: end;
+}
+
+.finance-range-grid.is-sheet {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
 }
 
 .finance-range-field {
@@ -1093,6 +1100,80 @@ select {
   padding: 0 10px;
   border-radius: 8px;
   box-shadow: none;
+}
+
+.finance-range-field.is-sheet {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  padding: 10px 12px;
+}
+
+.finance-range-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  align-items: end;
+}
+
+.finance-range-dialog[hidden] {
+  display: none;
+}
+
+.finance-range-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(5, 6, 12, 0.58);
+}
+
+.finance-range-sheet {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 460px);
+  margin: 0 auto;
+  border-radius: 22px 22px 0 0;
+  border: 1px solid var(--line);
+  background:
+    var(--card-shine),
+    color-mix(in srgb, var(--panel) 92%, var(--bg));
+  padding: 18px;
+  box-shadow: 0 -20px 48px rgba(0, 0, 0, 0.34);
+}
+
+.finance-range-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.finance-range-sheet-head h3 {
+  margin: 0;
+}
+
+.finance-range-caption {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.finance-range-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 74%, var(--bg));
+  color: var(--muted);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.finance-range-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .finance-chart-head strong,
@@ -1858,6 +1939,21 @@ select {
 
   .finance-chart-head small {
     text-align: left;
+  }
+
+  .finance-range-trigger {
+    min-height: 46px;
+    padding: 0 12px;
+  }
+
+  .finance-range-sheet {
+    width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .finance-range-actions {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .wish-cloud {
