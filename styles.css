@@ -1054,8 +1054,8 @@ select {
 }
 
 .finance-statement-toolbar {
-  display: grid;
-  grid-template-columns: auto auto;
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
   justify-content: space-between;
@@ -1825,18 +1825,19 @@ select {
   }
 
   .finance-statement-toolbar {
-    grid-template-columns: minmax(0, 1fr);
-    justify-content: stretch;
+    align-items: stretch;
   }
 
   .finance-range-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px;
   }
 
   .finance-range-field {
-    padding: 7px 8px;
-    gap: 6px;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    padding: 8px 10px;
+    gap: 5px;
   }
 
   .finance-range-field span {
@@ -1846,6 +1847,17 @@ select {
   .finance-range-field input {
     min-height: 38px;
     padding: 0 8px;
+  }
+
+  .finance-chart-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: start;
+    gap: 4px;
+  }
+
+  .finance-chart-head small {
+    text-align: left;
   }
 
   .wish-cloud {
