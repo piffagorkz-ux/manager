@@ -374,6 +374,8 @@ let financeExpenseRange = createDefaultFinanceRange();
 let financeStatementRange = createDefaultFinanceRange();
 let activeFinanceRangeTarget = "expense";
 let financeRangeDraft = createDefaultFinanceRange();
+let moduleStateSyncInFlight = false;
+let pendingModuleStatePayload = null;
 
 init();
 
@@ -854,31 +856,42 @@ async function loadRemoteState() {
 }
 
 async function loadRemoteModuleState() {
-  if (!db || !currentUser) return loadModuleState();
+  const localModuleState = loadModuleState();
+  if (!db || !currentUser) return localModuleState;
 
   const { data, error } = await db
     .from("module_state")
-    .select("data")
+    .select("data,updated_at")
     .eq("user_id", currentUser.id)
     .maybeSingle();
 
   if (error) {
     console.warn("Could not load module state", error);
-    return loadModuleState();
+    return localModuleState;
   }
 
-  return normalizeModuleState(data?.data || {});
+  const remoteModuleState = normalizeModuleState({
+    ...(data?.data || {}),
+    updatedAt: data?.updated_at ? new Date(data.updated_at).getTime() : data?.data?.updatedAt,
+  });
+
+  if (localModuleState.updatedAt > remoteModuleState.updatedAt) {
+    scheduleRemoteModuleStateSave(localModuleState);
+    return localModuleState;
+  }
+
+  return remoteModuleState;
 }
 
 function loadModuleState() {
   const saved = localStorage.getItem(MODULE_STORAGE_KEY);
-  if (!saved) return { finance: createEmptyFinance(), goals: [], wishes: [] };
+  if (!saved) return { finance: createEmptyFinance(), goals: [], wishes: [], updatedAt: 0 };
 
   try {
     const value = JSON.parse(saved);
     return normalizeModuleState(value);
   } catch {
-    return { finance: createEmptyFinance(), goals: [], wishes: [] };
+    return { finance: createEmptyFinance(), goals: [], wishes: [], updatedAt: 0 };
   }
 }
 
@@ -911,6 +924,7 @@ function normalizeModuleState(value) {
         createdAt: wish.createdAt || Date.now(),
         completedAt: wish.completedAt || null,
       })),
+    updatedAt: Number(value.updatedAt) || 0,
   };
 }
 
@@ -1054,16 +1068,45 @@ function saveModuleState() {
     finance: state.finance || createEmptyFinance(),
     goals: state.goals || [],
     wishes: state.wishes || [],
+    updatedAt: Date.now(),
   };
   localStorage.setItem(MODULE_STORAGE_KEY, JSON.stringify(data));
 
   if (db && currentUser) {
-    db.from("module_state")
-      .upsert({ user_id: currentUser.id, data, updated_at: new Date().toISOString() })
-      .then(({ error }) => {
-        if (error) console.warn("Could not save module state", error);
-      });
+    scheduleRemoteModuleStateSave(data);
   }
+}
+
+function scheduleRemoteModuleStateSave(data) {
+  pendingModuleStatePayload = data;
+  if (moduleStateSyncInFlight || !db || !currentUser) return;
+  void flushRemoteModuleStateSave();
+}
+
+async function flushRemoteModuleStateSave() {
+  if (moduleStateSyncInFlight || !db || !currentUser || !pendingModuleStatePayload) return;
+  moduleStateSyncInFlight = true;
+
+  while (pendingModuleStatePayload && db && currentUser) {
+    const payload = pendingModuleStatePayload;
+    pendingModuleStatePayload = null;
+
+    const { error } = await db
+      .from("module_state")
+      .upsert({
+        user_id: currentUser.id,
+        data: payload,
+        updated_at: new Date(payload.updatedAt || Date.now()).toISOString(),
+      });
+
+    if (error) {
+      console.warn("Could not save module state", error);
+      pendingModuleStatePayload = payload;
+      break;
+    }
+  }
+
+  moduleStateSyncInFlight = false;
 }
 
 async function rollTomorrowIntoToday() {
